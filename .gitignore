@@ -1,0 +1,14 @@
+.DS_Store
+node_modules
+.next
+out
+build
+coverage
+.env
+.env*.local
+*.log
+*.tsbuildinfo
+vercel
+.vercel
+public/images/
+public/videos/
