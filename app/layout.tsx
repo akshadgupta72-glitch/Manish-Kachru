@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display, Poppins, Geist } from "next/font/google";
+import { Geist, Inter, Playfair_Display, Poppins } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { LenisProvider } from "@/components/LenisProvider";

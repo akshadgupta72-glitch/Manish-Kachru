@@ -308,7 +308,7 @@ export const servicePages: Record<string, ServicePage> = {
     details: [
       { label: "Day", value: "Every Sunday" },
       { label: "Time", value: "12 PM - 2 PM IST" },
-      { label: "Fee", value: "₹499 per session" },
+      { label: "Fee", value: "₹500 per session" },
       { label: "Seats", value: "Limited" }
     ],
     learnItems: ["HD Bridal Techniques", "Skin Prep Mastery", "Product Breakdown"],

@@ -3,6 +3,7 @@
 import type { ServicePage } from "@/lib/service-pages";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
+import Script from "next/script";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
 type ServiceBookingFormProps = {
@@ -14,16 +15,121 @@ type BookingState = {
   message: string;
 };
 
+type RazorpayOrderResponse = {
+  ok: boolean;
+  order_id?: string;
+  amount?: number;
+  currency?: string;
+  message?: string;
+};
+
+type RazorpayPaymentResponse = {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
+};
+
+type RazorpayFailureResponse = {
+  error?: {
+    description?: string;
+  };
+};
+
+type RazorpayOptions = {
+  key: string;
+  amount: number;
+  currency: string;
+  name: string;
+  description: string;
+  order_id: string;
+  prefill: {
+    name: string;
+    email: string;
+    contact: string;
+  };
+  theme: {
+    color: string;
+  };
+  modal: {
+    ondismiss: () => void;
+  };
+  handler: (response: RazorpayPaymentResponse) => void;
+};
+
+type RazorpayInstance = {
+  open: () => void;
+  on: (event: "payment.failed", callback: (response: RazorpayFailureResponse) => void) => void;
+};
+
+type RazorpayConstructor = new (options: RazorpayOptions) => RazorpayInstance;
+
+declare global {
+  interface Window {
+    Razorpay?: RazorpayConstructor;
+  }
+}
+
 const initialState: BookingState = {
   ok: false,
   message: ""
 };
+
+const masterclassPaymentOptions = {
+  "next-class": {
+    label: "Next class enrollment",
+    amount: 50000,
+    displayAmount: "₹500",
+    buttonLabel: "Pay ₹500 to Enroll for Next Class"
+  },
+  "monthly-access": {
+    label: "Monthly access",
+    amount: 150000,
+    displayAmount: "₹1,500",
+    buttonLabel: "Pay ₹1,500 for Monthly Access"
+  }
+} as const;
+
+type MasterclassPaymentOptionKey = keyof typeof masterclassPaymentOptions;
+
+function getMasterclassPaymentOption(value: string | undefined) {
+  if (value === "monthly-access") return masterclassPaymentOptions["monthly-access"];
+  return masterclassPaymentOptions["next-class"];
+}
+
+function readFormValue(formData: FormData, key: string) {
+  const value = formData.get(key);
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function loadRazorpayScript() {
+  if (window.Razorpay) return Promise.resolve(true);
+
+  return new Promise<boolean>((resolve) => {
+    const existingScript = document.querySelector<HTMLScriptElement>(
+      'script[src="https://checkout.razorpay.com/v1/checkout.js"]'
+    );
+
+    if (existingScript) {
+      existingScript.addEventListener("load", () => resolve(true), { once: true });
+      existingScript.addEventListener("error", () => resolve(false), { once: true });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
 
 export function ServiceBookingForm({ page }: ServiceBookingFormProps) {
   const [state, setState] = useState<BookingState>(initialState);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
   const playedSuccessSound = useRef(false);
+  const isWeeklyMasterclass = page.slug === "weekly-masterclasses";
 
   useEffect(() => {
     if (!state.ok) return;
@@ -36,6 +142,140 @@ export function ServiceBookingForm({ page }: ServiceBookingFormProps) {
     return () => window.clearTimeout(timeout);
   }, [state.ok]);
 
+  async function submitBooking(formData: FormData) {
+    const response = await fetch("/api/booking", {
+        method: "POST",
+        body: formData
+      });
+
+    return (await response.json()) as BookingState;
+  }
+
+  async function handleMasterclassPayment(formData: FormData, paymentOption: (typeof masterclassPaymentOptions)[MasterclassPaymentOptionKey]) {
+    const key = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+
+    try {
+      if (!key) {
+        throw new Error("Missing Razorpay public key.");
+      }
+
+      const isScriptReady = await loadRazorpayScript();
+
+      if (!isScriptReady || !window.Razorpay) {
+        throw new Error("Razorpay checkout could not be loaded. Please try again.");
+      }
+
+      const orderResponse = await fetch("/api/create-order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          amount: paymentOption.amount,
+          currency: "INR",
+          receipt: `weekly_masterclass_${Date.now()}_${paymentOption.amount}`
+        })
+      });
+      const order = (await orderResponse.json()) as RazorpayOrderResponse;
+
+      if (!orderResponse.ok || !order.ok || !order.order_id || !order.amount || !order.currency) {
+        throw new Error(order.message || "Could not create Razorpay order.");
+      }
+
+      const razorpay = new window.Razorpay({
+        key,
+        amount: order.amount,
+        currency: order.currency,
+        name: "Looks By Manish Kachru",
+        description: `Weekly Masterclass - ${paymentOption.label}`,
+        order_id: order.order_id,
+        prefill: {
+          name: readFormValue(formData, "name"),
+          email: readFormValue(formData, "email"),
+          contact: readFormValue(formData, "phone")
+        },
+        theme: {
+          color: "#1f1a17"
+        },
+        modal: {
+          ondismiss: () => {
+            setIsSubmitting(false);
+            setState({
+              ok: false,
+              message: "Payment was cancelled. Your card or UPI was not charged."
+            });
+          }
+        },
+        handler: async (payment) => {
+          try {
+            const verifyResponse = await fetch("/api/verify-payment", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify(payment)
+            });
+            const verifyResult = (await verifyResponse.json()) as BookingState;
+
+            if (!verifyResponse.ok || !verifyResult.ok) {
+              throw new Error(verifyResult.message || "Payment verification failed.");
+            }
+
+            const existingNotes = readFormValue(formData, "notes");
+            formData.append("functions", paymentOption.label);
+            formData.set(
+              "notes",
+              [
+                existingNotes,
+                "Weekly masterclass payment verified.",
+                `Plan: ${paymentOption.label}`,
+                `Payment ID: ${payment.razorpay_payment_id}`,
+                `Order ID: ${payment.razorpay_order_id}`,
+                `Amount: ${paymentOption.displayAmount}`
+              ]
+                .filter(Boolean)
+                .join("\n")
+            );
+
+            const bookingResult = await submitBooking(formData);
+            setState({
+              ok: bookingResult.ok,
+              message: bookingResult.ok
+                ? "Payment received. Your weekly masterclass enrollment has been added to the CRM."
+                : `Payment received, but we could not save the form: ${bookingResult.message}`
+            });
+          } catch (error) {
+            setState({
+              ok: false,
+              message:
+                error instanceof Error
+                  ? error.message
+                  : "Payment could not be verified. Please contact the team."
+            });
+          } finally {
+            setIsSubmitting(false);
+          }
+        }
+      });
+
+      razorpay.on("payment.failed", (response) => {
+        setIsSubmitting(false);
+        setState({
+          ok: false,
+          message: response.error?.description || "Payment failed. Please try again."
+        });
+      });
+
+      razorpay.open();
+    } catch (error) {
+      setIsSubmitting(false);
+      setState({
+        ok: false,
+        message: error instanceof Error ? error.message : "Could not start Razorpay checkout."
+      });
+    }
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSubmitting(true);
@@ -43,12 +283,15 @@ export function ServiceBookingForm({ page }: ServiceBookingFormProps) {
 
     const formData = new FormData(event.currentTarget);
 
+    if (isWeeklyMasterclass) {
+      const submitter = (event.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
+      const paymentOption = getMasterclassPaymentOption(submitter?.value);
+      await handleMasterclassPayment(formData, paymentOption);
+      return;
+    }
+
     try {
-      const response = await fetch("/api/booking", {
-        method: "POST",
-        body: formData
-      });
-      const result = (await response.json()) as BookingState;
+      const result = await submitBooking(formData);
       setState(result);
     } catch (error) {
       setState({
@@ -103,6 +346,9 @@ export function ServiceBookingForm({ page }: ServiceBookingFormProps) {
 
   return (
     <section id="booking" className="bg-white px-5 py-14 sm:px-8 sm:py-20" aria-labelledby="service-booking-title">
+      {isWeeklyMasterclass ? (
+        <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
+      ) : null}
       <div className="mx-auto w-full max-w-[680px] rounded-[14px] border border-black/10 bg-white p-5 shadow-[0_18px_70px_rgba(8,8,8,0.06)] sm:p-8">
         {state.ok ? (
           <div className="relative" aria-live="polite">
@@ -136,7 +382,9 @@ export function ServiceBookingForm({ page }: ServiceBookingFormProps) {
             </p>
             <h2 className="luxury-form-title mt-3">Your request has been received.</h2>
             <p className="mt-5 max-w-xl text-[15px] leading-7 text-black/62">
-              Our team will contact you within 24 hours. We have also sent a confirmation email to the address you entered.
+              {isWeeklyMasterclass
+                ? "Your payment has been verified and your enrollment has been added to the studio CRM. Our team will share your class details within 24 hours."
+                : "Our team will contact you within 24 hours. We have also sent a confirmation email to the address you entered."}
             </p>
           </div>
         ) : (
@@ -155,80 +403,146 @@ export function ServiceBookingForm({ page }: ServiceBookingFormProps) {
         <form onSubmit={handleSubmit} className="mt-7 grid gap-4" aria-label={`${page.title} booking form`}>
           <input type="hidden" name="service_slug" value={page.slug} />
           <input type="hidden" name="service_title" value={page.title} />
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="grid gap-2 font-sans text-[13px] font-medium text-black/78">
-              Name
-              <input
-                className="focus-ring rounded-[10px] border border-black/14 bg-white px-4 py-3 text-[14px] font-normal text-black outline-none placeholder:text-black/32"
-                name="name"
-                placeholder="Your name"
-                autoComplete="name"
-                required
-              />
-            </label>
-            <label className="grid gap-2 font-sans text-[13px] font-medium text-black/78">
-              Phone
-              <input
-                className="focus-ring rounded-[10px] border border-black/14 bg-white px-4 py-3 text-[14px] font-normal text-black outline-none placeholder:text-black/32"
-                name="phone"
-                placeholder="Your phone number"
-                autoComplete="tel"
-                required
-              />
-            </label>
-            <label className="grid gap-2 font-sans text-[13px] font-medium text-black/78">
-              Email
-              <input
-                className="focus-ring rounded-[10px] border border-black/14 bg-white px-4 py-3 text-[14px] font-normal text-black outline-none placeholder:text-black/32"
-                name="email"
-                placeholder="Your email"
-                type="email"
-                autoComplete="email"
-                required
-              />
-            </label>
-            <label className="grid gap-2 font-sans text-[13px] font-medium text-black/78">
-              Date
-              <input
-                className="focus-ring rounded-[10px] border border-black/14 bg-white px-4 py-3 text-[14px] font-normal text-black outline-none placeholder:text-black/32"
-                name="date"
-                type="date"
-              />
-            </label>
-          </div>
-
-          <label className="grid gap-2 font-sans text-[13px] font-medium text-black/78">
-            Location
-            <input
-              className="focus-ring rounded-[10px] border border-black/14 bg-white px-4 py-3 text-[14px] font-normal text-black outline-none placeholder:text-black/32"
-              name="location"
-              placeholder="Venue or city"
-            />
-          </label>
-
-          <fieldset>
-            <legend className="font-sans text-[13px] font-medium text-black/78">Functions</legend>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {page.functions.map((item) => (
-                <label
-                  key={item}
-                  className="focus-within:ring-2 focus-within:ring-black/30 rounded-full border border-black/12 bg-[#fbfaf8] px-3 py-1.5 text-[13px] text-black/70"
-                >
-                  <input className="sr-only" type="checkbox" name="functions" value={item} />
-                  {item}
+          {isWeeklyMasterclass ? (
+            <>
+              <label className="grid gap-2 font-sans text-[13px] font-medium text-black/78">
+                Name
+                <input
+                  className="focus-ring rounded-[10px] border border-black/14 bg-white px-4 py-3 text-[14px] font-normal text-black outline-none placeholder:text-black/32"
+                  name="name"
+                  placeholder="Your name"
+                  autoComplete="name"
+                  required
+                />
+              </label>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="grid gap-2 font-sans text-[13px] font-medium text-black/78">
+                  Email
+                  <input
+                    className="focus-ring rounded-[10px] border border-black/14 bg-white px-4 py-3 text-[14px] font-normal text-black outline-none placeholder:text-black/32"
+                    name="email"
+                    placeholder="Your email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                  />
                 </label>
-              ))}
-            </div>
-          </fieldset>
+                <label className="grid gap-2 font-sans text-[13px] font-medium text-black/78">
+                  Phone number
+                  <input
+                    className="focus-ring rounded-[10px] border border-black/14 bg-white px-4 py-3 text-[14px] font-normal text-black outline-none placeholder:text-black/32"
+                    name="phone"
+                    placeholder="Your phone number"
+                    autoComplete="tel"
+                    required
+                  />
+                </label>
+              </div>
+              <label className="grid gap-2 font-sans text-[13px] font-medium text-black/78">
+                Function
+                <select
+                  className="focus-ring rounded-[10px] border border-black/14 bg-white px-4 py-3 text-[14px] font-normal text-black outline-none"
+                  name="functions"
+                  required
+                  defaultValue=""
+                >
+                  <option value="" disabled>
+                    Select your level or format
+                  </option>
+                  {page.functions.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="grid gap-2 font-sans text-[13px] font-medium text-black/78">
+                Notes
+                <textarea
+                  className="focus-ring min-h-[96px] resize-y rounded-[10px] border border-black/14 bg-white px-4 py-3 text-[14px] font-normal text-black outline-none placeholder:text-black/32"
+                  name="notes"
+                  placeholder="Tell us about your experience level, goals, or preferred class format"
+                />
+              </label>
+            </>
+          ) : (
+            <>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="grid gap-2 font-sans text-[13px] font-medium text-black/78">
+                  Name
+                  <input
+                    className="focus-ring rounded-[10px] border border-black/14 bg-white px-4 py-3 text-[14px] font-normal text-black outline-none placeholder:text-black/32"
+                    name="name"
+                    placeholder="Your name"
+                    autoComplete="name"
+                    required
+                  />
+                </label>
+                <label className="grid gap-2 font-sans text-[13px] font-medium text-black/78">
+                  Phone
+                  <input
+                    className="focus-ring rounded-[10px] border border-black/14 bg-white px-4 py-3 text-[14px] font-normal text-black outline-none placeholder:text-black/32"
+                    name="phone"
+                    placeholder="Your phone number"
+                    autoComplete="tel"
+                    required
+                  />
+                </label>
+                <label className="grid gap-2 font-sans text-[13px] font-medium text-black/78">
+                  Email
+                  <input
+                    className="focus-ring rounded-[10px] border border-black/14 bg-white px-4 py-3 text-[14px] font-normal text-black outline-none placeholder:text-black/32"
+                    name="email"
+                    placeholder="Your email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                  />
+                </label>
+                <label className="grid gap-2 font-sans text-[13px] font-medium text-black/78">
+                  Date
+                  <input
+                    className="focus-ring rounded-[10px] border border-black/14 bg-white px-4 py-3 text-[14px] font-normal text-black outline-none placeholder:text-black/32"
+                    name="date"
+                    type="date"
+                  />
+                </label>
+              </div>
 
-          <label className="grid gap-2 font-sans text-[13px] font-medium text-black/78">
-            Notes
-            <textarea
-              className="focus-ring min-h-[96px] resize-y rounded-[10px] border border-black/14 bg-white px-4 py-3 text-[14px] font-normal text-black outline-none placeholder:text-black/32"
-              name="notes"
-              placeholder="Tell us about your look or event details"
-            />
-          </label>
+              <label className="grid gap-2 font-sans text-[13px] font-medium text-black/78">
+                Location
+                <input
+                  className="focus-ring rounded-[10px] border border-black/14 bg-white px-4 py-3 text-[14px] font-normal text-black outline-none placeholder:text-black/32"
+                  name="location"
+                  placeholder="Venue or city"
+                />
+              </label>
+
+              <fieldset>
+                <legend className="font-sans text-[13px] font-medium text-black/78">Functions</legend>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {page.functions.map((item) => (
+                    <label
+                      key={item}
+                      className="focus-within:ring-2 focus-within:ring-black/30 rounded-full border border-black/12 bg-[#fbfaf8] px-3 py-1.5 text-[13px] text-black/70"
+                    >
+                      <input className="sr-only" type="checkbox" name="functions" value={item} />
+                      {item}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+
+              <label className="grid gap-2 font-sans text-[13px] font-medium text-black/78">
+                Notes
+                <textarea
+                  className="focus-ring min-h-[96px] resize-y rounded-[10px] border border-black/14 bg-white px-4 py-3 text-[14px] font-normal text-black outline-none placeholder:text-black/32"
+                  name="notes"
+                  placeholder="Tell us about your look or event details"
+                />
+              </label>
+            </>
+          )}
 
           {state.message ? (
             <p className={state.ok ? "text-[13px] text-black/70" : "text-[13px] text-red-700"}>
@@ -236,13 +550,32 @@ export function ServiceBookingForm({ page }: ServiceBookingFormProps) {
             </p>
           ) : null}
 
-          <button
-            className="focus-ring mt-1 rounded-full bg-[#1f1a17] px-6 py-4 text-[12px] font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:bg-black disabled:cursor-wait disabled:opacity-60"
-            type="submit"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Submitting" : "Submit Request"}
-          </button>
+          {isWeeklyMasterclass ? (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {(Object.entries(masterclassPaymentOptions) as Array<
+                [MasterclassPaymentOptionKey, (typeof masterclassPaymentOptions)[MasterclassPaymentOptionKey]]
+              >).map(([value, option]) => (
+                <button
+                  key={value}
+                  className="focus-ring rounded-full bg-[#1f1a17] px-5 py-4 text-[12px] font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-black disabled:cursor-wait disabled:opacity-60"
+                  type="submit"
+                  name="payment_plan"
+                  value={value}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Processing Payment" : option.buttonLabel}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <button
+              className="focus-ring mt-1 rounded-full bg-[#1f1a17] px-6 py-4 text-[12px] font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:bg-black disabled:cursor-wait disabled:opacity-60"
+              type="submit"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Submitting" : "Submit Request"}
+            </button>
+          )}
         </form>
           </>
         )}
