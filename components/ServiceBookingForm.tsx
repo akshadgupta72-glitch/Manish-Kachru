@@ -79,15 +79,22 @@ const masterclassPaymentOptions = {
     label: "Next class enrollment",
     amount: 50000,
     displayAmount: "₹500",
-    buttonLabel: "Pay ₹500 to Enroll for Next Class"
+    buttonLabel: "Enroll for Next Class"
   },
   "monthly-access": {
     label: "Monthly access",
     amount: 150000,
     displayAmount: "₹1,500",
-    buttonLabel: "Pay ₹1,500 for Monthly Access"
+    buttonLabel: "Get Monthly Access"
   }
 } as const;
+
+const consultationPaymentOption = {
+  label: "Beauty consultation",
+  amount: 50000,
+  displayAmount: "₹500",
+  buttonLabel: "Get Consultation"
+};
 
 type MasterclassPaymentOptionKey = keyof typeof masterclassPaymentOptions;
 
@@ -130,6 +137,7 @@ export function ServiceBookingForm({ page }: ServiceBookingFormProps) {
   const [showNotification, setShowNotification] = useState(false);
   const playedSuccessSound = useRef(false);
   const isWeeklyMasterclass = page.slug === "weekly-masterclasses";
+  const isBeautyConsultation = page.slug === "beauty-consultation";
 
   useEffect(() => {
     if (!state.ok) return;
@@ -276,6 +284,115 @@ export function ServiceBookingForm({ page }: ServiceBookingFormProps) {
     }
   }
 
+  async function handleConsultationPayment() {
+    setIsSubmitting(true);
+    setState(initialState);
+
+    const key = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+
+    try {
+      if (!key) {
+        throw new Error("Missing Razorpay public key.");
+      }
+
+      const isScriptReady = await loadRazorpayScript();
+
+      if (!isScriptReady || !window.Razorpay) {
+        throw new Error("Razorpay checkout could not be loaded. Please try again.");
+      }
+
+      const orderResponse = await fetch("/api/create-order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          amount: consultationPaymentOption.amount,
+          currency: "INR",
+          receipt: `beauty_consultation_${Date.now()}`
+        })
+      });
+      const order = (await orderResponse.json()) as RazorpayOrderResponse;
+
+      if (!orderResponse.ok || !order.ok || !order.order_id || !order.amount || !order.currency) {
+        throw new Error(order.message || "Could not create Razorpay order.");
+      }
+
+      const razorpay = new window.Razorpay({
+        key,
+        amount: order.amount,
+        currency: order.currency,
+        name: "Looks By Manish Kachru",
+        description: "Beauty Consultation",
+        order_id: order.order_id,
+        prefill: {
+          name: "",
+          email: "",
+          contact: ""
+        },
+        theme: {
+          color: "#1f1a17"
+        },
+        modal: {
+          ondismiss: () => {
+            setIsSubmitting(false);
+            setState({
+              ok: false,
+              message: "Payment was cancelled. Your card or UPI was not charged."
+            });
+          }
+        },
+        handler: async (payment) => {
+          try {
+            const verifyResponse = await fetch("/api/verify-payment", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify(payment)
+            });
+            const verifyResult = (await verifyResponse.json()) as BookingState;
+
+            if (!verifyResponse.ok || !verifyResult.ok) {
+              throw new Error(verifyResult.message || "Payment verification failed.");
+            }
+
+            setState({
+              ok: true,
+              message: "Payment received. Your beauty consultation has been reserved."
+            });
+          } catch (error) {
+            setState({
+              ok: false,
+              message:
+                error instanceof Error
+                  ? error.message
+                  : "Payment could not be verified. Please contact the team."
+            });
+          } finally {
+            setIsSubmitting(false);
+          }
+        }
+      });
+
+      razorpay.on("payment.failed", (response) => {
+        setIsSubmitting(false);
+        setState({
+          ok: false,
+          message: response.error?.description || "Payment failed. Please try again."
+        });
+      });
+
+      razorpay.open();
+    } catch (error) {
+      setIsSubmitting(false);
+      setState({
+        ok: false,
+        message: error instanceof Error ? error.message : "Could not start Razorpay checkout."
+      });
+    }
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSubmitting(true);
@@ -346,7 +463,7 @@ export function ServiceBookingForm({ page }: ServiceBookingFormProps) {
 
   return (
     <section id="booking" className="bg-white px-5 py-14 sm:px-8 sm:py-20" aria-labelledby="service-booking-title">
-      {isWeeklyMasterclass ? (
+      {isWeeklyMasterclass || isBeautyConsultation ? (
         <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       ) : null}
       <div className="mx-auto w-full max-w-[680px] rounded-[14px] border border-black/10 bg-white p-5 shadow-[0_18px_70px_rgba(8,8,8,0.06)] sm:p-8">
@@ -384,6 +501,8 @@ export function ServiceBookingForm({ page }: ServiceBookingFormProps) {
             <p className="mt-5 max-w-xl text-[15px] leading-7 text-black/62">
               {isWeeklyMasterclass
                 ? "Your payment has been verified and your enrollment has been added to the studio CRM. Our team will share your class details within 24 hours."
+                : isBeautyConsultation
+                  ? "Your payment has been verified. Our team will contact you with consultation details within 24 hours."
                 : "Our team will contact you within 24 hours. We have also sent a confirmation email to the address you entered."}
             </p>
           </div>
@@ -400,6 +519,36 @@ export function ServiceBookingForm({ page }: ServiceBookingFormProps) {
         </h2>
         <p className="mt-3 max-w-xl text-[14px] leading-6 text-black/58">{page.bookingDescription}</p>
 
+        {isBeautyConsultation ? (
+          <div className="mt-7 grid gap-5" aria-label={`${page.title} checkout`}>
+            <div className="rounded-[12px] border border-black/12 bg-[#fbfaf8] p-5">
+              <p className="font-sans text-[12px] font-semibold uppercase tracking-[0.24em] text-[#9f7c50]">
+                Consultation Fee
+              </p>
+              <p className="mt-3 font-sans text-[34px] font-semibold leading-none tracking-[-0.04em] text-black">
+                {consultationPaymentOption.displayAmount}
+              </p>
+              <p className="mt-4 max-w-lg font-sans text-[14px] font-light leading-6 text-black/58">
+                No form is needed here. Checkout opens securely through Razorpay, then the team will coordinate your beauty consultation.
+              </p>
+            </div>
+
+            {state.message ? (
+              <p className={state.ok ? "text-[13px] text-black/70" : "text-[13px] text-red-700"}>
+                {state.message}
+              </p>
+            ) : null}
+
+            <button
+              className="focus-ring mt-1 rounded-full bg-[#1f1a17] px-6 py-4 text-[12px] font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:bg-black disabled:cursor-wait disabled:opacity-60"
+              type="button"
+              disabled={isSubmitting}
+              onClick={handleConsultationPayment}
+            >
+              {isSubmitting ? "Opening Checkout" : consultationPaymentOption.buttonLabel}
+            </button>
+          </div>
+        ) : (
         <form onSubmit={handleSubmit} className="mt-7 grid gap-4" aria-label={`${page.title} booking form`}>
           <input type="hidden" name="service_slug" value={page.slug} />
           <input type="hidden" name="service_title" value={page.title} />
@@ -555,16 +704,23 @@ export function ServiceBookingForm({ page }: ServiceBookingFormProps) {
               {(Object.entries(masterclassPaymentOptions) as Array<
                 [MasterclassPaymentOptionKey, (typeof masterclassPaymentOptions)[MasterclassPaymentOptionKey]]
               >).map(([value, option]) => (
-                <button
-                  key={value}
-                  className="focus-ring rounded-full bg-[#1f1a17] px-5 py-4 text-[12px] font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-black disabled:cursor-wait disabled:opacity-60"
-                  type="submit"
-                  name="payment_plan"
-                  value={value}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Processing Payment" : option.buttonLabel}
-                </button>
+                <div key={value} className="rounded-[14px] border border-black/12 bg-[#fbfaf8] p-4">
+                  <p className="font-sans text-[12px] font-semibold uppercase tracking-[0.2em] text-[#9f7c50]">
+                    {option.label}
+                  </p>
+                  <p className="mt-2 font-sans text-[26px] font-semibold leading-none tracking-[-0.04em] text-black">
+                    {option.displayAmount}
+                  </p>
+                  <button
+                    className="focus-ring mt-4 w-full rounded-full bg-[#1f1a17] px-5 py-3.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-black disabled:cursor-wait disabled:opacity-60"
+                    type="submit"
+                    name="payment_plan"
+                    value={value}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Processing Payment" : option.buttonLabel}
+                  </button>
+                </div>
               ))}
             </div>
           ) : (
@@ -577,6 +733,7 @@ export function ServiceBookingForm({ page }: ServiceBookingFormProps) {
             </button>
           )}
         </form>
+        )}
           </>
         )}
       </div>

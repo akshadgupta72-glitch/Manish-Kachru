@@ -72,10 +72,10 @@ export const servicePages: Record<string, ServicePage> = {
     videoSrc: videoFile("Bridal looks by manish optimised", "what you get.mp4"),
     videoLabel: "Bridal preview",
     detailEyebrow: "Included",
-    detailTitle: "What to Expect",
+    detailTitle: "What You Get",
     detailIntroTitle: "Bridal Signature",
     detailIntro:
-      "A refined bridal experience with skin preparation, HD base, eye detailing, draping guidance, and a long-wear finish built for ceremonies and camera.",
+      "A complete bridal transformation designed for ceremonies, camera, jewellery, outfit, and long wedding hours.",
     details: [
       { label: "Session Fee", value: "Custom quote" },
       { label: "Duration", value: "2.5 to 3.5 hours" },
@@ -92,34 +92,34 @@ export const servicePages: Record<string, ServicePage> = {
     functions: ["Bridal", "Mehendi", "Haldi", "Sangeet", "Reception"],
     faqs: [
       {
-        question: "How far in advance should I book my bridal makeup?",
+        question: "Skin preparation and base architecture",
         answer:
-          "For peak wedding dates, booking 3 to 6 months in advance is ideal. If your date is close, send an enquiry and the team will confirm availability."
+          "The skin is prepared according to texture, weather, and event timing before building a refined HD base that photographs cleanly and still feels comfortable in person."
       },
       {
-        question: "Do you offer trial sessions before the wedding day?",
+        question: "Bridal eye detailing and feature balance",
         answer:
-          "Yes. Trial sessions can be planned before the final booking so the bridal look, skin finish, and references are aligned."
+          "Eyes, brows, lashes, liner, lip tone, and face structure are balanced around your jewellery, outfit color, face shape, and the mood of the ceremony."
       },
       {
-        question: "What products do you use?",
+        question: "Ceremony-wise look direction",
         answer:
-          "Professional luxury and HD-friendly products are selected according to skin type, weather, outfit, and the camera setup."
+          "Bridal, mehendi, haldi, sangeet, and reception looks can be planned as one visual story so every function feels different but still belongs to you."
       },
       {
-        question: "Will the makeup last throughout the entire event?",
+        question: "Long-wear setting and camera finish",
         answer:
-          "The look is built in refined layers with long-wear prep, setting, and touch-up guidance for a polished finish through the event."
+          "The makeup is layered, set, and finished for long hours, emotional moments, photography, videography, and changing indoor or outdoor lighting."
       },
       {
-        question: "Do you travel for destination weddings?",
+        question: "Draping, jewellery, and final polish guidance",
         answer:
-          "Yes. Destination bookings can be arranged with travel, stay, and function schedule details shared in advance."
+          "The final look is checked with the dupatta, neckline, jewellery, hair direction, and camera framing so the bride looks complete from every angle."
       },
       {
-        question: "What makes Looks by Manish Kachru different?",
+        question: "Destination and multi-function support",
         answer:
-          "The approach is editorial but personal: skin-led beauty, balanced features, precise finish, and a calm luxury experience."
+          "Destination weddings and multi-day events can be planned with call times, travel, touch-up needs, and a calm schedule for the wedding day."
       }
     ]
   },
@@ -133,10 +133,10 @@ export const servicePages: Record<string, ServicePage> = {
     videoSrc: videoFile("Editorial and party looks by manish kachru optimised.", "what you get party.mp4"),
     videoLabel: "Party HD preview",
     detailEyebrow: "Included",
-    detailTitle: "What to Expect",
+    detailTitle: "What You Get",
     detailIntroTitle: "Party HD Makeup",
     detailIntro:
-      "Polished HD glam designed around your outfit, lighting, and event mood with a clean base, sculpted features, and photo-ready detail.",
+      "Polished HD glam designed around your outfit, lighting, event mood, and how you want to feel when you walk in.",
     details: [
       { label: "Session Fee", value: "From ₹3,500" },
       { label: "Duration", value: "90 minutes" },
@@ -153,29 +153,29 @@ export const servicePages: Record<string, ServicePage> = {
     functions: ["Cocktail", "Birthday", "Reception", "Engagement", "Red Carpet"],
     faqs: [
       {
-        question: "What is included in Party HD makeup?",
+        question: "HD base for real life and camera",
         answer:
-          "Skin prep, HD base, eye look, lashes when required, lip finish, and final setting for a camera-ready result."
+          "Skin prep, complexion correction, HD base, concealing, setting, and finishing are done so the makeup looks smooth in photos without feeling heavy."
       },
       {
-        question: "Can the look be soft glam instead of heavy glam?",
+        question: "Soft glam, full glam, or statement glam",
         answer:
-          "Yes. The look can be soft, sculpted, glossy, matte, dramatic, or minimal depending on your outfit and preference."
+          "The look can be minimal, glossy, sculpted, smoky, matte, colorful, or red-carpet inspired depending on your outfit and occasion."
       },
       {
-        question: "How long does the appointment take?",
+        question: "Eye, lash, lip, and sculpting detail",
         answer:
-          "Most party looks take around 90 minutes, with extra time recommended for hair, draping, or a more detailed eye look."
+          "Eye makeup, liner, lashes where needed, contour, blush, highlight, and lip color are selected to flatter your features and event lighting."
       },
       {
-        question: "Can you match the makeup to my outfit?",
+        question: "Outfit and jewellery coordination",
         answer:
-          "Yes. Outfit color, jewellery, neckline, lighting, and event mood are used to balance the final beauty direction."
+          "The makeup direction is matched with your outfit color, neckline, jewellery, hairstyle, and whether the event is day, evening, indoor, or outdoor."
       },
       {
-        question: "Is travel available for party bookings?",
+        question: "Long-wear party finish",
         answer:
-          "Travel can be arranged depending on the location, time slot, and booking schedule."
+          "The final look is set for dancing, photos, greetings, and long event hours, with guidance on what to carry for touch-ups."
       }
     ]
   },
@@ -189,10 +189,10 @@ export const servicePages: Record<string, ServicePage> = {
     videoSrc: videoFile("Editorial and party looks by manish kachru optimised.", "what you get editorial.mp4"),
     videoLabel: "Editorial preview",
     detailEyebrow: "Included",
-    detailTitle: "What to Expect",
+    detailTitle: "What You Get",
     detailIntroTitle: "Editorial Direction",
     detailIntro:
-      "Creative look direction for camera-led work, including face design, continuity, moodboard interpretation, and polished on-set execution.",
+      "Creative look direction for campaigns, shoots, film, and visual projects where the makeup has to support the story.",
     details: [
       { label: "Artist Fee", value: "Per project" },
       { label: "Looks", value: "Per brief" },
@@ -209,29 +209,29 @@ export const servicePages: Record<string, ServicePage> = {
     functions: ["Campaign", "Film", "Music Video", "Fashion", "Advertising"],
     faqs: [
       {
-        question: "What does editorial and film direction include?",
+        question: "Moodboard and visual direction",
         answer:
-          "It includes beauty direction, look design, makeup execution, continuity notes, and creative alignment with the production mood."
+          "Manish studies the campaign, script, styling, lighting, and references to design makeup that supports the creative world instead of looking random."
       },
       {
-        question: "Can you create multiple looks in one shoot day?",
+        question: "Character, fashion, and beauty look design",
         answer:
-          "Yes. Multiple looks can be planned with a clear schedule, product setup, model prep, and transition time."
+          "Looks can be clean, cinematic, experimental, glamorous, period-inspired, high-fashion, or product-focused depending on the brief."
       },
       {
-        question: "Do you work with photographers and stylists?",
+        question: "On-set makeup execution",
         answer:
-          "Yes. The beauty direction is built to support the full visual team, including styling, lighting, hair, and camera language."
+          "Makeup is built for the camera, with attention to shine, texture, continuity, close-ups, lighting shifts, and monitor checks."
       },
       {
-        question: "Can you follow a brand moodboard?",
+        question: "Multiple looks and continuity",
         answer:
-          "Yes. Brand references, campaign goals, color stories, and product focus are used to shape the final makeup language."
+          "For long shoot days, multiple looks can be planned with changeover timing, continuity notes, and product organization."
       },
       {
-        question: "How is pricing handled for productions?",
+        question: "Creative collaboration with the team",
         answer:
-          "Pricing depends on call time, number of looks, team needs, usage, location, and the scope of creative direction."
+          "The makeup direction is aligned with photographers, directors, stylists, hair artists, models, and brand teams so the final visual feels intentional."
       }
     ]
   },
@@ -248,7 +248,7 @@ export const servicePages: Record<string, ServicePage> = {
     detailTitle: "What to Expect",
     detailIntroTitle: "Consultation",
     detailIntro:
-      "During this private Zoom session, Manish will help you design your signature look from product recommendations and skin prep to outfit and jewellery coordination.",
+      "Think of it like a beauty diagnosis. Manish studies your event, outfit, features, skin, current routine, and makeup goals, then recommends the look, products, prep, and styling direction that will suit you best.",
     details: [
       { label: "Session Fee", value: "₹500" },
       { label: "Duration", value: "30 minutes" },
@@ -259,35 +259,35 @@ export const servicePages: Record<string, ServicePage> = {
     looksEyebrow: "Beauty Notes",
     looksTitle: "Signature Looks by Manish Kachru",
     bookingEyebrow: "Consultation",
-    bookingTitle: "Request Beauty Consultation",
+    bookingTitle: "Beauty Consultation",
     bookingDescription:
-      "Tell us what you want to improve, your current routine, and whether you prefer an online or in-person session.",
+      "Pay the consultation fee to reserve your session. Manish will analyse your event, outfit, face, routine, and goals, then guide you with the right makeup direction.",
     functions: ["Online", "In Studio", "Product Edit", "Skin Prep", "Routine"],
     faqs: [
       {
-        question: "Who is a beauty consultation for?",
+        question: "What happens in the consultation?",
         answer:
-          "It is for anyone who wants a cleaner makeup routine, better product choices, or a signature look that feels elevated but wearable."
+          "Manish first understands your event, outfit, skin, features, references, and current makeup routine, then recommends the right beauty direction."
       },
       {
-        question: "Can I do the consultation online?",
+        question: "What will Manish suggest?",
         answer:
-          "Yes. Online consultations can be done over video call with product review, face mapping, and routine guidance."
+          "You will receive guidance on what makeup will suit you, what products to use, how to prep your skin, and how to coordinate your look with the event."
       },
       {
-        question: "Will you recommend products?",
+        question: "Is this like a doctor consultation?",
         answer:
-          "Yes. Recommendations are based on your skin, budget, existing kit, finish preferences, and daily lifestyle."
+          "Yes, in spirit. First the problem is analysed, then the right beauty solution is suggested for your face, occasion, outfit, and lifestyle."
       },
       {
-        question: "Can you teach me how to recreate the look?",
+        question: "Can this help before my wedding, party, or shoot?",
         answer:
-          "Yes. The session can include step-by-step application guidance, brush technique, and product placement."
+          "Yes. It is useful before weddings, parties, shoots, important events, or whenever you need clarity before booking makeup or buying products."
       },
       {
-        question: "Can this help before my wedding or shoot?",
+        question: "What is the consultation fee?",
         answer:
-          "Yes. It is especially useful for brides, creators, and professionals who want clarity before important events."
+          "The consultation fee is ₹500."
       }
     ]
   },
@@ -304,22 +304,29 @@ export const servicePages: Record<string, ServicePage> = {
     detailTitle: "Class Details",
     detailIntroTitle: "Weekly Masterclass",
     detailIntro:
-      "A focused weekly beauty class covering HD bridal techniques, skin prep mastery, product breakdowns, and live application detail.",
+      "A practical learning experience where Manish teaches technique, product understanding, live application, client handling, and the mindset required to grow as a makeup artist.",
     details: [
       { label: "Day", value: "Every Sunday" },
       { label: "Time", value: "12 PM - 2 PM IST" },
       { label: "Fee", value: "₹500 per session" },
       { label: "Seats", value: "Limited" }
     ],
-    learnItems: ["HD Bridal Techniques", "Skin Prep Mastery", "Product Breakdown"],
+    learnItems: [
+      "Professional skin preparation and base building",
+      "How to perform makeup on different people and face types",
+      "Bridal, party, editorial, and camera-ready looks",
+      "Product selection, brush technique, layering, and finishing",
+      "How to communicate with clients and understand references",
+      "How to build your career and earn as a makeup artist"
+    ],
     looksVideos: [videoFile("Weekly master class optimised", "FacetuneEAE98DF0-0F13-46AA-827E-1DF380C36DBB copy.mp4")],
     showLooksTicker: false,
     looksEyebrow: "Student Work",
     looksTitle: "Techniques from the Masterclass",
     bookingEyebrow: "Enroll",
-    bookingTitle: "Request Masterclass Seat",
+    bookingTitle: "Masterclass Enrollment",
     bookingDescription:
-      "Share your experience level and preferred format. We will send the upcoming class schedule and seat details.",
+      "Share your details and choose a class access option. Pricing is shown clearly below; the checkout button will open Razorpay securely.",
     functions: ["Beginner", "Artist", "Online", "Offline", "Monthly Access"],
     faqs: [
       {
@@ -330,22 +337,22 @@ export const servicePages: Record<string, ServicePage> = {
       {
         question: "What will I learn?",
         answer:
-          "You will learn skin prep, complexion building, eye detailing, product selection, face balance, and finishing for camera."
+          "You will learn skin prep, complexion building, eye detailing, product selection, makeup on different faces, look creation, and how to grow as a makeup artist."
       },
       {
-        question: "Is the class live or recorded?",
+        question: "Will I learn how to perform makeup on people?",
         answer:
-          "The main experience is live, with format details confirmed for each batch depending on the schedule."
+          "Yes. The class focuses on real application logic: analysing a face, choosing products, placing makeup correctly, and finishing the look for real clients."
+      },
+      {
+        question: "Will career guidance be included?",
+        answer:
+          "Yes. Manish will guide learners on building confidence, serving clients, improving their portfolio, and earning from makeup as an artist."
       },
       {
         question: "Do I need a makeup kit?",
         answer:
           "A basic kit is helpful. The team can share a simple product checklist before the session."
-      },
-      {
-        question: "Are seats limited?",
-        answer:
-          "Yes. Sessions are kept limited so questions, feedback, and technique corrections remain personal."
       }
     ]
   }

@@ -5,6 +5,7 @@ import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
 import { ServiceBookingForm } from "@/components/ServiceBookingForm";
 import { ServiceLooksTicker } from "@/components/ServiceLooksTicker";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { type ServicePage } from "@/lib/service-pages";
 
 type ServicePageTemplateProps = {
@@ -12,6 +13,8 @@ type ServicePageTemplateProps = {
 };
 
 export function ServicePageTemplate({ page }: ServicePageTemplateProps) {
+  const usesAccordionDetails = ["bridals", "party-hd-makeups", "editorial-film-direction"].includes(page.slug);
+
   return (
     <main className="bg-white">
       <Navbar />
@@ -73,15 +76,40 @@ export function ServicePageTemplate({ page }: ServicePageTemplateProps) {
             >
               {page.detailTitle}
             </h2>
-            <div className="mt-8 border border-black/16 p-5 sm:p-6">
-              <h3 className="flex items-center gap-3 font-sans text-[20px] font-semibold leading-7 text-black">
-                <span className="text-[#D8AE64]">✦</span>
-                {page.detailIntroTitle}
-              </h3>
-              <p className="mt-4 max-w-[620px] font-sans text-[14px] font-light leading-6 text-black/55">
-                {page.detailIntro}
-              </p>
-            </div>
+            {usesAccordionDetails ? (
+              <div className="mt-8">
+                <p className="max-w-[620px] font-sans text-[15px] font-light leading-7 text-black/58">
+                  {page.detailIntro}
+                </p>
+                <Accordion type="single" collapsible className="mt-7 grid gap-2">
+                  {page.faqs.map((item, index) => (
+                    <AccordionItem
+                      key={item.question}
+                      value={`detail-${index}`}
+                      className="rounded-[12px] border border-black/16 px-4 sm:px-5"
+                    >
+                      <AccordionTrigger className="py-5 text-left font-sans text-[16px] font-semibold leading-6 text-black hover:no-underline">
+                        <span className="mr-3 text-black/42">{String(index + 1).padStart(2, "0")}</span>
+                        {item.question}
+                      </AccordionTrigger>
+                      <AccordionContent className="pb-5 pl-9 font-sans text-[14px] font-light leading-7 text-black/60">
+                        {item.answer}
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              </div>
+            ) : (
+              <div className="mt-8 border border-black/16 p-5 sm:p-6">
+                <h3 className="flex items-center gap-3 font-sans text-[20px] font-semibold leading-7 text-black">
+                  <span className="text-[#D8AE64]">✦</span>
+                  {page.detailIntroTitle}
+                </h3>
+                <p className="mt-4 max-w-[620px] font-sans text-[14px] font-light leading-6 text-black/55">
+                  {page.detailIntro}
+                </p>
+              </div>
+            )}
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {page.details.map((detail) => (
@@ -94,7 +122,9 @@ export function ServicePageTemplate({ page }: ServicePageTemplateProps) {
 
             {page.learnItems ? (
               <div className="mt-6">
-                <h3 className="font-sans text-[20px] font-semibold leading-7 text-black">What You&apos;ll Learn</h3>
+                <h3 className="font-sans text-[20px] font-semibold leading-7 text-black">
+                  {page.slug === "weekly-masterclasses" ? "What You'll Learn" : "Included Focus"}
+                </h3>
                 <ul className="mt-4 grid gap-2 font-sans text-[15px] font-light leading-6 text-black/72">
                   {page.learnItems.map((item) => (
                     <li key={item}>- {item}</li>
