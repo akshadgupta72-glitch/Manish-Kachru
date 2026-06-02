@@ -7,13 +7,93 @@ import { ServiceBookingForm } from "@/components/ServiceBookingForm";
 import { ServiceLooksTicker } from "@/components/ServiceLooksTicker";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { type ServicePage } from "@/lib/service-pages";
+import { Award, Camera, Clock3, ShieldCheck, Sparkles, Star } from "lucide-react";
 
 type ServicePageTemplateProps = {
   page: ServicePage;
 };
 
+const serviceProof = {
+  bridals: {
+    highlights: [
+      { icon: "shield", label: "Long Lasting", value: "Up to 16+ Hours" },
+      { icon: "camera", label: "Camera Ready", value: "HD/4K Friendly" },
+      { icon: "sparkle", label: "Premium Products", value: "Skin Safe" }
+    ],
+    profile: {
+      name: "Manish Kachru",
+      role: "Bridal Beauty Artist",
+      experience: "5+ Years Experience",
+      note: "Trusted for refined bridal glam, balanced features, and long-wear camera-ready finishes."
+    }
+  },
+  "party-hd-makeups": {
+    highlights: [
+      { icon: "shield", label: "Party Proof", value: "Long-wear Finish" },
+      { icon: "camera", label: "HD Ready", value: "Photo Friendly" },
+      { icon: "sparkle", label: "Custom Glam", value: "Outfit Led" }
+    ],
+    profile: {
+      name: "Manish Kachru",
+      role: "HD Party Makeup Artist",
+      experience: "5+ Years Experience",
+      note: "Known for polished event glam that feels elevated, wearable, and beautifully finished on camera."
+    }
+  },
+  "editorial-film-direction": {
+    highlights: [
+      { icon: "camera", label: "Shoot Ready", value: "Camera First" },
+      { icon: "sparkle", label: "Look Design", value: "Brief Led" },
+      { icon: "shield", label: "Continuity", value: "On-set Detail" }
+    ],
+    profile: {
+      name: "Manish Kachru",
+      role: "Editorial Beauty Director",
+      experience: "5+ Years Experience",
+      note: "Creates intentional beauty looks for campaigns, films, fashion stories, and visual productions."
+    }
+  },
+  "beauty-consultation": {
+    highlights: [
+      { icon: "sparkle", label: "Face Analysis", value: "Personal Guidance" },
+      { icon: "award", label: "Product Edit", value: "Practical Picks" },
+      { icon: "clock", label: "Session", value: "30 Minutes" }
+    ],
+    profile: {
+      name: "Manish Kachru",
+      role: "Beauty Consultant",
+      experience: "5+ Years Experience",
+      note: "A focused consultation to understand your features, event, outfit, and ideal makeup direction."
+    }
+  },
+  "weekly-masterclasses": {
+    highlights: [
+      { icon: "award", label: "Technique", value: "Artist Training" },
+      { icon: "camera", label: "Looks", value: "Client Ready" },
+      { icon: "clock", label: "Schedule", value: "Weekly Class" }
+    ],
+    profile: {
+      name: "Manish Kachru",
+      role: "Makeup Mentor",
+      experience: "5+ Years Experience",
+      note: "Learn practical makeup technique, client handling, product logic, and career direction from Manish."
+    }
+  }
+} as const;
+
+function HighlightIcon({ name }: { name: string }) {
+  const className = "h-5 w-5 text-[#A66C28]";
+
+  if (name === "camera") return <Camera className={className} />;
+  if (name === "clock") return <Clock3 className={className} />;
+  if (name === "award") return <Award className={className} />;
+  if (name === "sparkle") return <Sparkles className={className} />;
+  return <ShieldCheck className={className} />;
+}
+
 export function ServicePageTemplate({ page }: ServicePageTemplateProps) {
   const usesAccordionDetails = ["bridals", "party-hd-makeups", "editorial-film-direction"].includes(page.slug);
+  const proof = serviceProof[page.slug as keyof typeof serviceProof];
 
   return (
     <main className="bg-white">
@@ -111,16 +191,69 @@ export function ServicePageTemplate({ page }: ServicePageTemplateProps) {
               </div>
             )}
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {proof ? (
+              <div className="mt-4 grid overflow-hidden rounded-[14px] border border-black/10 bg-[#fbfaf8] sm:grid-cols-3">
+                {proof.highlights.map((item) => (
+                  <div key={item.label} className="flex items-center gap-3 border-black/10 px-4 py-4 sm:border-r last:sm:border-r-0">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white shadow-[0_8px_24px_rgba(0,0,0,0.05)]">
+                      <HighlightIcon name={item.icon} />
+                    </span>
+                    <span>
+                      <span className="block font-sans text-[13px] font-semibold leading-5 text-black">
+                        {item.label}
+                      </span>
+                      <span className="block font-sans text-[12px] font-light leading-4 text-black/52">
+                        {item.value}
+                      </span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
               {page.details.map((detail) => (
-                <div key={detail.label} className="border border-black/16 p-4">
+                <div key={detail.label} className="rounded-[12px] border border-black/10 bg-white p-4">
                   <p className="font-sans text-[13px] font-light leading-5 text-black/50">{detail.label}</p>
                   <p className="mt-1.5 font-sans text-[18px] font-semibold leading-6 text-black">{detail.value}</p>
                 </div>
               ))}
             </div>
 
-            {page.learnItems ? (
+            {page.slug === "weekly-masterclasses" && page.learnItems ? (
+              <div className="mt-6 rounded-[16px] border border-black/10 bg-white p-5">
+                <h3 className="font-sans text-[20px] font-semibold leading-7 text-black">What You&apos;ll Learn</h3>
+                <ul className="mt-4 grid gap-2 font-sans text-[15px] font-light leading-6 text-black/72">
+                  {page.learnItems.map((item) => (
+                    <li key={item}>- {item}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
+            {proof ? (
+              <div className="mt-4 rounded-[16px] border border-[#D8AE64]/35 bg-[linear-gradient(135deg,#fffaf2_0%,#fff_58%,#f8f3eb_100%)] p-5 shadow-[0_18px_55px_rgba(74,45,18,0.06)]">
+                <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-4">
+                    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white text-[#A66C28] shadow-[0_10px_30px_rgba(0,0,0,0.06)]">
+                      <Star className="h-5 w-5" />
+                    </span>
+                    <div>
+                      <p className="font-sans text-[16px] font-semibold leading-5 text-black">{proof.profile.name}</p>
+                      <p className="mt-1 font-sans text-[12px] font-medium uppercase tracking-[0.16em] text-black/45">
+                        {proof.profile.role}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="rounded-full border border-[#D8AE64]/35 bg-white px-4 py-2 font-sans text-[12px] font-semibold uppercase tracking-[0.16em] text-[#8A5A22]">
+                    {proof.profile.experience}
+                  </div>
+                </div>
+                <p className="mt-4 border-t border-black/8 pt-4 font-sans text-[14px] font-light leading-6 text-black/58">
+                  {proof.profile.note}
+                </p>
+              </div>
+            ) : page.learnItems ? (
               <div className="mt-6">
                 <h3 className="font-sans text-[20px] font-semibold leading-7 text-black">
                   {page.slug === "weekly-masterclasses" ? "What You'll Learn" : "Included Focus"}
