@@ -8,14 +8,9 @@ export async function GET() {
     process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.trim() || process.env.RAZORPAY_KEY_ID?.trim();
 
   if (!keyId) {
-    const visibleRazorpayEnv = Object.keys(process.env)
-      .filter((key) => key.includes("RAZORPAY"))
-      .sort();
-
     return NextResponse.json(
       {
         ok: false,
-        visibleRazorpayEnv,
         message:
           "Missing Razorpay public key. Add NEXT_PUBLIC_RAZORPAY_KEY_ID or RAZORPAY_KEY_ID in Vercel Production environment variables."
       },
