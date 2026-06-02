@@ -17,8 +17,33 @@ function formatDate(value: string | null) {
   return new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(value));
 }
 
+function formatPaymentAmount(amount: number | null, currency: string | null) {
+  if (!amount) return "Not applicable";
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: currency || "INR",
+    maximumFractionDigits: 0
+  }).format(amount / 100);
+}
+
 function toCsv(bookings: AdminBooking[]) {
-  const headers = ["Name", "Phone", "Email", "Service", "Event Date", "Location", "Budget", "Status", "Notes", "Submission Date"];
+  const headers = [
+    "Name",
+    "Phone",
+    "Email",
+    "Service",
+    "Event Date",
+    "Location",
+    "Budget",
+    "Payment Status",
+    "Payment Plan",
+    "Payment Amount",
+    "Razorpay Payment ID",
+    "Razorpay Order ID",
+    "Status",
+    "Notes",
+    "Submission Date"
+  ];
   const rows = bookings.map((booking) => [
     booking.name,
     booking.phone,
@@ -27,6 +52,11 @@ function toCsv(bookings: AdminBooking[]) {
     booking.eventDate ?? "",
     booking.location ?? "",
     booking.budget,
+    booking.paymentStatus,
+    booking.paymentPlan ?? "",
+    formatPaymentAmount(booking.paymentAmount, booking.paymentCurrency),
+    booking.razorpayPaymentId ?? "",
+    booking.razorpayOrderId ?? "",
     booking.status,
     booking.notes ?? "",
     booking.submittedAt
@@ -227,6 +257,11 @@ export function BookingsTable({ bookings }: BookingsTableProps) {
                   ["Event Date", formatDate(selected.eventDate)],
                   ["Location", selected.location ?? "Not shared"],
                   ["Budget", selected.budget],
+                  ["Payment Status", selected.paymentStatus],
+                  ["Payment Plan", selected.paymentPlan ?? "Not applicable"],
+                  ["Payment Amount", formatPaymentAmount(selected.paymentAmount, selected.paymentCurrency)],
+                  ["Razorpay Payment ID", selected.razorpayPaymentId ?? "Not applicable"],
+                  ["Razorpay Order ID", selected.razorpayOrderId ?? "Not applicable"],
                   ["Submission Date", formatDate(selected.submittedAt)],
                   ["Functions", selected.functions.join(", ") || "Not shared"]
                 ].map(([label, value]) => (
@@ -265,4 +300,3 @@ export function BookingsTable({ bookings }: BookingsTableProps) {
     </div>
   );
 }
-

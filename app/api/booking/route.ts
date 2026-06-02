@@ -11,11 +11,20 @@ type BookingPayload = {
   location: string | null;
   functions: string[];
   notes: string | null;
+  payment_status?: string | null;
+  payment_amount?: number | null;
+  payment_currency?: string | null;
+  payment_plan?: string | null;
+  razorpay_payment_id?: string | null;
+  razorpay_order_id?: string | null;
 };
 
 function getSupabaseAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const serviceRoleKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE ||
+    process.env.service_role;
 
   if (!url || !serviceRoleKey) {
     throw new Error("Missing Supabase server environment variables.");
@@ -40,6 +49,36 @@ function readNullableString(formData: FormData, key: string) {
   return value.length > 0 ? value : null;
 }
 
+function readNullableNumber(formData: FormData, key: string) {
+  const value = readString(formData, key);
+  if (!value) return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function appendPaymentNotes(payload: BookingPayload) {
+  const paymentLines = [
+    payload.payment_status ? `Payment status: ${payload.payment_status}` : "",
+    payload.payment_plan ? `Payment plan: ${payload.payment_plan}` : "",
+    payload.payment_amount ? `Payment amount: ₹${(payload.payment_amount / 100).toLocaleString("en-IN")}` : "",
+    payload.razorpay_payment_id ? `Razorpay payment ID: ${payload.razorpay_payment_id}` : "",
+    payload.razorpay_order_id ? `Razorpay order ID: ${payload.razorpay_order_id}` : ""
+  ].filter(Boolean);
+
+  if (paymentLines.length === 0) return payload.notes;
+
+  return [payload.notes, "Payment details:", ...paymentLines].filter(Boolean).join("\n");
+}
+
+function getServiceRoleKey() {
+  return (
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE ||
+    process.env.service_role ||
+    ""
+  );
+}
+
 export async function POST(request: Request) {
   const formData = await request.formData();
 
@@ -56,8 +95,15 @@ export async function POST(request: Request) {
       .filter((value): value is string => typeof value === "string")
       .map((value) => value.trim())
       .filter(Boolean),
-    notes: readNullableString(formData, "notes")
+    notes: readNullableString(formData, "notes"),
+    payment_status: readNullableString(formData, "payment_status"),
+    payment_amount: readNullableNumber(formData, "payment_amount"),
+    payment_currency: readNullableString(formData, "payment_currency"),
+    payment_plan: readNullableString(formData, "payment_plan"),
+    razorpay_payment_id: readNullableString(formData, "razorpay_payment_id"),
+    razorpay_order_id: readNullableString(formData, "razorpay_order_id")
   };
+  payload.notes = appendPaymentNotes(payload);
 
   if (!payload.name || !payload.phone || !payload.email || !payload.service_slug) {
     return NextResponse.json(
@@ -71,14 +117,36 @@ export async function POST(request: Request) {
     const { error } = await supabase.from("booking_requests").insert(payload);
 
     if (error) {
-      return NextResponse.json({ ok: false, message: error.message }, { status: 500 });
+      const shouldRetryWithoutNewColumns =
+        error.message.includes("payment_") || error.message.includes("razorpay_");
+
+      if (!shouldRetryWithoutNewColumns) {
+        return NextResponse.json({ ok: false, message: error.message }, { status: 500 });
+      }
+
+      const fallbackPayload = {
+        service_slug: payload.service_slug,
+        service_title: payload.service_title,
+        name: payload.name,
+        phone: payload.phone,
+        email: payload.email,
+        event_date: payload.event_date,
+        location: payload.location,
+        functions: payload.functions,
+        notes: payload.notes
+      };
+      const { error: fallbackError } = await supabase.from("booking_requests").insert(fallbackPayload);
+
+      if (fallbackError) {
+        return NextResponse.json({ ok: false, message: fallbackError.message }, { status: 500 });
+      }
     }
 
     await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/send-booking-email`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`
+        Authorization: `Bearer ${getServiceRoleKey()}`
       },
       body: JSON.stringify(payload)
     }).catch(() => undefined);

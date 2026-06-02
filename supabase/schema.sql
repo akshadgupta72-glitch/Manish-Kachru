@@ -9,9 +9,23 @@ create table if not exists public.booking_requests (
   location text,
   functions text[] not null default '{}',
   notes text,
+  payment_status text not null default 'not_required',
+  payment_amount integer,
+  payment_currency text default 'INR',
+  payment_plan text,
+  razorpay_payment_id text,
+  razorpay_order_id text,
   status text not null default 'new',
   created_at timestamptz not null default now()
 );
+
+alter table public.booking_requests
+add column if not exists payment_status text not null default 'not_required',
+add column if not exists payment_amount integer,
+add column if not exists payment_currency text default 'INR',
+add column if not exists payment_plan text,
+add column if not exists razorpay_payment_id text,
+add column if not exists razorpay_order_id text;
 
 alter table public.booking_requests enable row level security;
 
@@ -27,3 +41,35 @@ using (false);
 
 alter table public.booking_requests
 alter column email set not null;
+
+create index if not exists booking_requests_created_at_idx
+on public.booking_requests (created_at desc);
+
+create index if not exists booking_requests_service_slug_idx
+on public.booking_requests (service_slug);
+
+create index if not exists booking_requests_payment_status_idx
+on public.booking_requests (payment_status);
+
+create or replace view public.crm_client_requests as
+select
+  id,
+  service_slug,
+  service_title,
+  name,
+  phone,
+  email,
+  event_date,
+  location,
+  functions,
+  notes,
+  payment_status,
+  payment_amount,
+  payment_currency,
+  payment_plan,
+  razorpay_payment_id,
+  razorpay_order_id,
+  status,
+  created_at
+from public.booking_requests
+order by created_at desc;

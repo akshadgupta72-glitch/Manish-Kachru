@@ -102,6 +102,24 @@ const consultationPaymentOption = {
   buttonLabel: "Get Consultation"
 };
 
+const consultationFunctions = [
+  "Bridal",
+  "Mehendi",
+  "Haldi",
+  "Sangeet",
+  "Reception",
+  "Engagement",
+  "Roka",
+  "Cocktail",
+  "Anniversary",
+  "Birthday",
+  "House Party",
+  "Red Carpet",
+  "Photoshoot",
+  "Corporate Event",
+  "Other"
+];
+
 type MasterclassPaymentOptionKey = keyof typeof masterclassPaymentOptions;
 
 function getMasterclassPaymentOption(value: string | undefined) {
@@ -250,6 +268,12 @@ export function ServiceBookingForm({ page }: ServiceBookingFormProps) {
 
             const existingNotes = readFormValue(formData, "notes");
             formData.append("functions", paymentOption.label);
+            formData.set("payment_status", "paid");
+            formData.set("payment_amount", String(paymentOption.amount));
+            formData.set("payment_currency", order.currency || "INR");
+            formData.set("payment_plan", paymentOption.label);
+            formData.set("razorpay_payment_id", payment.razorpay_payment_id);
+            formData.set("razorpay_order_id", payment.razorpay_order_id);
             formData.set(
               "notes",
               [
@@ -303,10 +327,7 @@ export function ServiceBookingForm({ page }: ServiceBookingFormProps) {
     }
   }
 
-  async function handleConsultationPayment() {
-    setIsSubmitting(true);
-    setState(initialState);
-
+  async function handleConsultationPayment(formData: FormData) {
     try {
       const key = await getRazorpayPublicKey();
 
@@ -341,9 +362,9 @@ export function ServiceBookingForm({ page }: ServiceBookingFormProps) {
         description: "Beauty Consultation",
         order_id: order.order_id,
         prefill: {
-          name: "",
-          email: "",
-          contact: ""
+          name: readFormValue(formData, "name"),
+          email: readFormValue(formData, "email"),
+          contact: readFormValue(formData, "phone")
         },
         theme: {
           color: "#1f1a17"
@@ -372,9 +393,32 @@ export function ServiceBookingForm({ page }: ServiceBookingFormProps) {
               throw new Error(verifyResult.message || "Payment verification failed.");
             }
 
+            const existingNotes = readFormValue(formData, "notes");
+            formData.set("payment_status", "paid");
+            formData.set("payment_amount", String(consultationPaymentOption.amount));
+            formData.set("payment_currency", order.currency || "INR");
+            formData.set("payment_plan", consultationPaymentOption.label);
+            formData.set("razorpay_payment_id", payment.razorpay_payment_id);
+            formData.set("razorpay_order_id", payment.razorpay_order_id);
+            formData.set(
+              "notes",
+              [
+                existingNotes,
+                "Beauty consultation payment verified.",
+                `Payment ID: ${payment.razorpay_payment_id}`,
+                `Order ID: ${payment.razorpay_order_id}`,
+                `Amount: ${consultationPaymentOption.displayAmount}`
+              ]
+                .filter(Boolean)
+                .join("\n")
+            );
+
+            const bookingResult = await submitBooking(formData);
             setState({
-              ok: true,
-              message: "Payment received. Your beauty consultation has been reserved."
+              ok: bookingResult.ok,
+              message: bookingResult.ok
+                ? "Payment received. Your consultation request has been added to the CRM."
+                : `Payment received, but we could not save the form: ${bookingResult.message}`
             });
           } catch (error) {
             setState({
@@ -419,6 +463,11 @@ export function ServiceBookingForm({ page }: ServiceBookingFormProps) {
       const submitter = (event.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
       const paymentOption = getMasterclassPaymentOption(submitter?.value);
       await handleMasterclassPayment(formData, paymentOption);
+      return;
+    }
+
+    if (isBeautyConsultation) {
+      await handleConsultationPayment(formData);
       return;
     }
 
@@ -535,7 +584,68 @@ export function ServiceBookingForm({ page }: ServiceBookingFormProps) {
         <p className="mt-3 max-w-xl text-[14px] leading-6 text-black/58">{page.bookingDescription}</p>
 
         {isBeautyConsultation ? (
-          <div className="mt-7 grid gap-5" aria-label={`${page.title} checkout`}>
+          <form onSubmit={handleSubmit} className="mt-7 grid gap-4" aria-label={`${page.title} consultation form`}>
+            <input type="hidden" name="service_slug" value={page.slug} />
+            <input type="hidden" name="service_title" value={page.title} />
+            <label className="grid gap-2 font-sans text-[13px] font-medium text-black/78">
+              Name
+              <input
+                className="focus-ring rounded-[10px] border border-black/14 bg-white px-4 py-3 text-[14px] font-normal text-black outline-none placeholder:text-black/32"
+                name="name"
+                placeholder="Your name"
+                autoComplete="name"
+                required
+              />
+            </label>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="grid gap-2 font-sans text-[13px] font-medium text-black/78">
+                Email
+                <input
+                  className="focus-ring rounded-[10px] border border-black/14 bg-white px-4 py-3 text-[14px] font-normal text-black outline-none placeholder:text-black/32"
+                  name="email"
+                  placeholder="Your email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                />
+              </label>
+              <label className="grid gap-2 font-sans text-[13px] font-medium text-black/78">
+                Phone number
+                <input
+                  className="focus-ring rounded-[10px] border border-black/14 bg-white px-4 py-3 text-[14px] font-normal text-black outline-none placeholder:text-black/32"
+                  name="phone"
+                  placeholder="Your phone number"
+                  autoComplete="tel"
+                  required
+                />
+              </label>
+            </div>
+            <label className="grid gap-2 font-sans text-[13px] font-medium text-black/78">
+              Function for consultation
+              <select
+                className="focus-ring rounded-[10px] border border-black/14 bg-white px-4 py-3 text-[14px] font-normal text-black outline-none"
+                name="functions"
+                required
+                defaultValue=""
+              >
+                <option value="" disabled>
+                  Select your occasion
+                </option>
+                {consultationFunctions.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="grid gap-2 font-sans text-[13px] font-medium text-black/78">
+              Notes
+              <textarea
+                className="focus-ring min-h-[104px] resize-y rounded-[10px] border border-black/14 bg-white px-4 py-3 text-[14px] font-normal text-black outline-none placeholder:text-black/32"
+                name="notes"
+                placeholder="Tell us about your outfit, event, skin concerns, current makeup routine, or the look you want guidance for"
+              />
+            </label>
             <div className="rounded-[12px] border border-black/12 bg-[#fbfaf8] p-5">
               <p className="font-sans text-[12px] font-semibold uppercase tracking-[0.24em] text-[#9f7c50]">
                 Consultation Fee
@@ -544,7 +654,7 @@ export function ServiceBookingForm({ page }: ServiceBookingFormProps) {
                 {consultationPaymentOption.displayAmount}
               </p>
               <p className="mt-4 max-w-lg font-sans text-[14px] font-light leading-6 text-black/58">
-                No form is needed here. Checkout opens securely through Razorpay, then the team will coordinate your beauty consultation.
+                Checkout opens securely through Razorpay. After payment, your consultation details will be saved in the CRM and confirmation emails will be sent.
               </p>
             </div>
 
@@ -556,13 +666,12 @@ export function ServiceBookingForm({ page }: ServiceBookingFormProps) {
 
             <button
               className="focus-ring mt-1 rounded-full bg-[#1f1a17] px-6 py-4 text-[12px] font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:bg-black disabled:cursor-wait disabled:opacity-60"
-              type="button"
+              type="submit"
               disabled={isSubmitting}
-              onClick={handleConsultationPayment}
             >
               {isSubmitting ? "Opening Checkout" : consultationPaymentOption.buttonLabel}
             </button>
-          </div>
+          </form>
         ) : (
         <form onSubmit={handleSubmit} className="mt-7 grid gap-4" aria-label={`${page.title} booking form`}>
           <input type="hidden" name="service_slug" value={page.slug} />

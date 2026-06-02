@@ -1,10 +1,11 @@
 import { AdminStatCard } from "@/components/admin/AdminStatCard";
 import { StudentsTable } from "@/components/admin/StudentsTable";
-import { masterclassStudents, revenueSummary } from "@/lib/admin/data";
+import { getMasterclassStudents, revenueSummary } from "@/lib/admin/data";
 
-export default function AdminMasterclassPage() {
-  const paidStudents = masterclassStudents.filter((student) => student.paymentStatus === "Paid").length;
-  const pendingStudents = masterclassStudents.filter((student) => student.paymentStatus === "Pending").length;
+export default async function AdminMasterclassPage() {
+  const students = await getMasterclassStudents();
+  const paidStudents = students.filter((student) => student.paymentStatus === "Paid").length;
+  const pendingStudents = students.filter((student) => student.paymentStatus === "Pending").length;
 
   return (
     <div className="mx-auto w-full max-w-[1320px] space-y-6">
@@ -19,14 +20,14 @@ export default function AdminMasterclassPage() {
       </header>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        <AdminStatCard label="Total enrolled" value={String(masterclassStudents.length)} icon="users" />
+        <AdminStatCard label="Total enrolled" value={String(students.length)} icon="users" />
         <AdminStatCard label="Current week" value={String(paidStudents)} detail="Paid students in this week's batch." icon="calendarDays" />
         <AdminStatCard label="Next batch" value="1" detail="Sunday enrollments move to the next week." icon="calendarDays" tone="gold" />
         <AdminStatCard label="Pending payments" value={String(pendingStudents)} icon="creditCard" />
         <AdminStatCard label="Weekly revenue" value={revenueSummary.masterclass} icon="indianRupee" tone="dark" />
       </section>
 
-      <StudentsTable students={masterclassStudents} />
+      <StudentsTable students={students} />
     </div>
   );
 }

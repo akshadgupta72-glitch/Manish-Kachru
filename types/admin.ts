@@ -12,6 +12,12 @@ export type AdminBooking = {
   budget: string;
   notes: string | null;
   functions: string[];
+  paymentStatus: string;
+  paymentAmount: number | null;
+  paymentCurrency: string | null;
+  paymentPlan: string | null;
+  razorpayPaymentId: string | null;
+  razorpayOrderId: string | null;
   status: AdminStatus;
   submittedAt: string;
 };
@@ -33,4 +39,3 @@ export type RevenuePoint = {
   bridal: number;
   consultation: number;
 };
-

@@ -12,6 +12,12 @@ type BookingRow = {
   location: string | null;
   functions: string[] | null;
   notes: string | null;
+  payment_status: string | null;
+  payment_amount: number | null;
+  payment_currency: string | null;
+  payment_plan: string | null;
+  razorpay_payment_id: string | null;
+  razorpay_order_id: string | null;
   status: string | null;
   created_at: string | null;
 };
@@ -37,6 +43,12 @@ function mapBooking(row: BookingRow): AdminBooking {
     budget: "Not shared",
     notes: row.notes,
     functions: row.functions ?? [],
+    paymentStatus: row.payment_status || "not_required",
+    paymentAmount: row.payment_amount,
+    paymentCurrency: row.payment_currency || "INR",
+    paymentPlan: row.payment_plan,
+    razorpayPaymentId: row.razorpay_payment_id,
+    razorpayOrderId: row.razorpay_order_id,
     status: normalizeStatus(row.status),
     submittedAt: row.created_at || new Date().toISOString()
   };
@@ -47,14 +59,40 @@ export async function getAdminBookings(limit?: number) {
     const supabase = createSupabaseAdminClient();
     let query = supabase
       .from("booking_requests")
-      .select("id, service_slug, service_title, name, phone, email, event_date, location, functions, notes, status, created_at")
+      .select("id, service_slug, service_title, name, phone, email, event_date, location, functions, notes, payment_status, payment_amount, payment_currency, payment_plan, razorpay_payment_id, razorpay_order_id, status, created_at")
       .order("created_at", { ascending: false });
 
     if (limit) query = query.limit(limit);
 
     const { data, error } = await query;
 
-    if (error) throw error;
+    if (error) {
+      const shouldRetryLegacySelect =
+        error.message.includes("payment_") || error.message.includes("razorpay_");
+
+      if (!shouldRetryLegacySelect) throw error;
+
+      let fallbackQuery = supabase
+        .from("booking_requests")
+        .select("id, service_slug, service_title, name, phone, email, event_date, location, functions, notes, status, created_at")
+        .order("created_at", { ascending: false });
+
+      if (limit) fallbackQuery = fallbackQuery.limit(limit);
+      const { data: fallbackData, error: fallbackError } = await fallbackQuery;
+      if (fallbackError) throw fallbackError;
+
+      return (fallbackData ?? []).map((row) =>
+        mapBooking({
+          ...(row as Omit<BookingRow, "payment_status" | "payment_amount" | "payment_currency" | "payment_plan" | "razorpay_payment_id" | "razorpay_order_id">),
+          payment_status: "not_required",
+          payment_amount: null,
+          payment_currency: "INR",
+          payment_plan: null,
+          razorpay_payment_id: null,
+          razorpay_order_id: null
+        })
+      );
+    }
 
     return (data ?? []).map((row) => mapBooking(row as BookingRow));
   } catch {
@@ -95,6 +133,34 @@ export const masterclassStudents: MasterclassStudent[] = [
   }
 ];
 
+function formatBatchLabel(start: Date, end: Date) {
+  const formatter = new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short" });
+  return `${formatter.format(start)} - ${formatter.format(end)}`;
+}
+
+export async function getMasterclassStudents() {
+  const bookings = await getAdminBookings();
+  const students = bookings
+    .filter((booking) => booking.serviceSlug === "weekly-masterclasses")
+    .map((booking): MasterclassStudent => {
+      const enrollmentDate = new Date(booking.submittedAt);
+      const { batchStart, batchEnd } = getMasterclassBatchForEnrollment(enrollmentDate);
+
+      return {
+        id: booking.id,
+        name: booking.name,
+        email: booking.email,
+        phone: booking.phone,
+        paymentStatus: booking.paymentStatus === "paid" ? "Paid" : "Pending",
+        enrollmentDate: enrollmentDate.toISOString().slice(0, 10),
+        assignedBatch: formatBatchLabel(batchStart, batchEnd),
+        attendance: "Not marked"
+      };
+    });
+
+  return students.length > 0 ? students : masterclassStudents;
+}
+
 export function getMasterclassBatchForEnrollment(enrollmentDate: Date) {
   // Business rule: masterclasses run Monday through Saturday. Sunday enrollments
   // are assigned to the next week's batch, which starts the following Monday.
@@ -128,4 +194,3 @@ export const revenueSummary = {
   bridal: "₹3.50L",
   consultation: "₹21.5K"
 };
-
