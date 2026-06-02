@@ -23,6 +23,12 @@ type RazorpayOrderResponse = {
   message?: string;
 };
 
+type RazorpayConfigResponse = {
+  ok: boolean;
+  keyId?: string;
+  message?: string;
+};
+
 type RazorpayPaymentResponse = {
   razorpay_payment_id: string;
   razorpay_order_id: string;
@@ -108,6 +114,23 @@ function readFormValue(formData: FormData, key: string) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+async function getRazorpayPublicKey() {
+  const bundledKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.trim();
+
+  if (bundledKey) return bundledKey;
+
+  const response = await fetch("/api/razorpay-config", {
+    cache: "no-store"
+  });
+  const data = (await response.json()) as RazorpayConfigResponse;
+
+  if (!response.ok || !data.ok || !data.keyId) {
+    throw new Error(data.message || "Missing Razorpay public key.");
+  }
+
+  return data.keyId;
+}
+
 function loadRazorpayScript() {
   if (window.Razorpay) return Promise.resolve(true);
 
@@ -160,12 +183,8 @@ export function ServiceBookingForm({ page }: ServiceBookingFormProps) {
   }
 
   async function handleMasterclassPayment(formData: FormData, paymentOption: (typeof masterclassPaymentOptions)[MasterclassPaymentOptionKey]) {
-    const key = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
-
     try {
-      if (!key) {
-        throw new Error("Missing Razorpay public key.");
-      }
+      const key = await getRazorpayPublicKey();
 
       const isScriptReady = await loadRazorpayScript();
 
@@ -288,12 +307,8 @@ export function ServiceBookingForm({ page }: ServiceBookingFormProps) {
     setIsSubmitting(true);
     setState(initialState);
 
-    const key = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
-
     try {
-      if (!key) {
-        throw new Error("Missing Razorpay public key.");
-      }
+      const key = await getRazorpayPublicKey();
 
       const isScriptReady = await loadRazorpayScript();
 
