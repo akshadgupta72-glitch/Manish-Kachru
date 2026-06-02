@@ -77,7 +77,6 @@ export const servicePages: Record<string, ServicePage> = {
     detailIntro:
       "A complete bridal transformation designed for ceremonies, camera, jewellery, outfit, and long wedding hours.",
     details: [
-      { label: "Session Fee", value: "Custom quote" },
       { label: "Duration", value: "2.5 to 3.5 hours" },
       { label: "Available", value: "By appointment" }
     ],
@@ -138,7 +137,6 @@ export const servicePages: Record<string, ServicePage> = {
     detailIntro:
       "Polished HD glam designed around your outfit, lighting, event mood, and how you want to feel when you walk in.",
     details: [
-      { label: "Session Fee", value: "From ₹3,500" },
       { label: "Duration", value: "90 minutes" },
       { label: "Available", value: "12 PM - 8 PM" }
     ],
@@ -194,7 +192,6 @@ export const servicePages: Record<string, ServicePage> = {
     detailIntro:
       "Creative look direction for campaigns, shoots, film, and visual projects where the makeup has to support the story.",
     details: [
-      { label: "Artist Fee", value: "Per project" },
       { label: "Looks", value: "Per brief" },
       { label: "Available", value: "Shoot schedule" }
     ],
@@ -250,7 +247,6 @@ export const servicePages: Record<string, ServicePage> = {
     detailIntro:
       "Think of it like a beauty diagnosis. Manish studies your event, outfit, features, skin, current routine, and makeup goals, then recommends the look, products, prep, and styling direction that will suit you best.",
     details: [
-      { label: "Session Fee", value: "₹500" },
       { label: "Duration", value: "30 minutes" },
       { label: "Available", value: "12 PM - 6 PM" }
     ],
@@ -308,7 +304,6 @@ export const servicePages: Record<string, ServicePage> = {
     details: [
       { label: "Day", value: "Every Sunday" },
       { label: "Time", value: "12 PM - 2 PM IST" },
-      { label: "Fee", value: "₹500 per session" },
       { label: "Seats", value: "Limited" }
     ],
     learnItems: [

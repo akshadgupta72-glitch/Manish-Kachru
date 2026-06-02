@@ -20,11 +20,11 @@ const serviceProof = {
       { icon: "camera", label: "Camera Ready", value: "HD/4K Friendly" },
       { icon: "sparkle", label: "Premium Products", value: "Skin Safe" }
     ],
-    profile: {
-      name: "Manish Kachru",
-      role: "Bridal Beauty Artist",
-      experience: "5+ Years Experience",
-      note: "Trusted for refined bridal glam, balanced features, and long-wear camera-ready finishes."
+    testimonial: {
+      name: "Priya Sharma",
+      role: "Bridal Client",
+      quote:
+        "The makeup stayed flawless through every ceremony and looked beautiful on camera without feeling heavy."
     }
   },
   "party-hd-makeups": {
@@ -33,11 +33,11 @@ const serviceProof = {
       { icon: "camera", label: "HD Ready", value: "Photo Friendly" },
       { icon: "sparkle", label: "Custom Glam", value: "Outfit Led" }
     ],
-    profile: {
-      name: "Manish Kachru",
-      role: "HD Party Makeup Artist",
-      experience: "5+ Years Experience",
-      note: "Known for polished event glam that feels elevated, wearable, and beautifully finished on camera."
+    testimonial: {
+      name: "Riya Malhotra",
+      role: "Party HD Client",
+      quote:
+        "The glam looked polished in every photo and still felt comfortable through the full evening."
     }
   },
   "editorial-film-direction": {
@@ -46,11 +46,11 @@ const serviceProof = {
       { icon: "sparkle", label: "Look Design", value: "Brief Led" },
       { icon: "shield", label: "Continuity", value: "On-set Detail" }
     ],
-    profile: {
-      name: "Manish Kachru",
-      role: "Editorial Beauty Director",
-      experience: "5+ Years Experience",
-      note: "Creates intentional beauty looks for campaigns, films, fashion stories, and visual productions."
+    testimonial: {
+      name: "Aanya Kapoor",
+      role: "Editorial Model",
+      quote:
+        "The look matched the concept perfectly and held up beautifully under lights and close-up shots."
     }
   },
   "beauty-consultation": {
@@ -59,11 +59,11 @@ const serviceProof = {
       { icon: "award", label: "Product Edit", value: "Practical Picks" },
       { icon: "clock", label: "Session", value: "30 Minutes" }
     ],
-    profile: {
-      name: "Manish Kachru",
-      role: "Beauty Consultant",
-      experience: "5+ Years Experience",
-      note: "A focused consultation to understand your features, event, outfit, and ideal makeup direction."
+    testimonial: {
+      name: "Neha Arora",
+      role: "Consultation Client",
+      quote:
+        "The session gave me clarity on my products, outfit, and the exact makeup direction for my event."
     }
   },
   "weekly-masterclasses": {
@@ -72,11 +72,11 @@ const serviceProof = {
       { icon: "camera", label: "Looks", value: "Client Ready" },
       { icon: "clock", label: "Schedule", value: "Weekly Class" }
     ],
-    profile: {
-      name: "Manish Kachru",
-      role: "Makeup Mentor",
-      experience: "5+ Years Experience",
-      note: "Learn practical makeup technique, client handling, product logic, and career direction from Manish."
+    testimonial: {
+      name: "Mehak Jain",
+      role: "Masterclass Student",
+      quote:
+        "The class made technique, product choice, and client-ready makeup feel practical and achievable."
     }
   }
 } as const;
@@ -145,7 +145,7 @@ export function ServicePageTemplate({ page }: ServicePageTemplateProps) {
       </section>
 
       <section className="bg-white px-5 py-14 sm:px-8 sm:py-20" aria-labelledby="what-you-get-title">
-        <div className="mx-auto grid w-full max-w-[1200px] items-stretch gap-8 lg:grid-cols-[0.82fr_1.18fr]">
+        <div className="mx-auto grid w-full max-w-[1200px] items-start gap-8 lg:grid-cols-[0.9fr_1.1fr]">
           <div>
             <p className="luxury-eyebrow mb-4">
               {page.detailEyebrow}
@@ -211,7 +211,7 @@ export function ServicePageTemplate({ page }: ServicePageTemplateProps) {
               </div>
             ) : null}
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {page.details.map((detail) => (
                 <div key={detail.label} className="rounded-[12px] border border-black/10 bg-white p-4">
                   <p className="font-sans text-[13px] font-light leading-5 text-black/50">{detail.label}</p>
@@ -239,18 +239,18 @@ export function ServicePageTemplate({ page }: ServicePageTemplateProps) {
                       <Star className="h-5 w-5" />
                     </span>
                     <div>
-                      <p className="font-sans text-[16px] font-semibold leading-5 text-black">{proof.profile.name}</p>
+                      <p className="font-sans text-[16px] font-semibold leading-5 text-black">{proof.testimonial.name}</p>
                       <p className="mt-1 font-sans text-[12px] font-medium uppercase tracking-[0.16em] text-black/45">
-                        {proof.profile.role}
+                        {proof.testimonial.role}
                       </p>
                     </div>
                   </div>
                   <div className="rounded-full border border-[#D8AE64]/35 bg-white px-4 py-2 font-sans text-[12px] font-semibold uppercase tracking-[0.16em] text-[#8A5A22]">
-                    {proof.profile.experience}
+                    Client Review
                   </div>
                 </div>
                 <p className="mt-4 border-t border-black/8 pt-4 font-sans text-[14px] font-light leading-6 text-black/58">
-                  {proof.profile.note}
+                  &quot;{proof.testimonial.quote}&quot;
                 </p>
               </div>
             ) : page.learnItems ? (
@@ -267,10 +267,10 @@ export function ServicePageTemplate({ page }: ServicePageTemplateProps) {
             ) : null}
           </div>
 
-          <figure className="h-full min-h-[380px] overflow-hidden rounded-[16px] bg-black sm:min-h-[460px] lg:min-h-full">
+          <figure className="overflow-hidden rounded-[16px] bg-black lg:sticky lg:top-24">
             <video
               src={page.videoSrc}
-              className="h-full min-h-[380px] w-full object-cover sm:min-h-[460px] lg:min-h-full"
+              className="aspect-[4/5] h-auto w-full object-cover sm:aspect-[16/13] lg:aspect-[5/6] xl:aspect-[4/5]"
               muted
               loop
               playsInline
