@@ -65,7 +65,7 @@ export function ServicePageTemplate({ page }: ServicePageTemplateProps) {
       </section>
 
       <section className="bg-white px-5 py-14 sm:px-8 sm:py-20" aria-labelledby="what-you-get-title">
-        <div className="mx-auto grid w-full max-w-[1200px] gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-start">
+        <div className="mx-auto grid w-full max-w-[1200px] items-stretch gap-8 lg:grid-cols-[0.82fr_1.18fr]">
           <div>
             <p className="luxury-eyebrow mb-4">
               {page.detailEyebrow}
@@ -134,10 +134,10 @@ export function ServicePageTemplate({ page }: ServicePageTemplateProps) {
             ) : null}
           </div>
 
-          <figure className="overflow-hidden rounded-[16px] bg-black">
+          <figure className="h-full min-h-[380px] overflow-hidden rounded-[16px] bg-black sm:min-h-[460px] lg:min-h-full">
             <video
               src={page.videoSrc}
-              className="aspect-[16/10] h-full w-full object-cover"
+              className="h-full min-h-[380px] w-full object-cover sm:min-h-[460px] lg:min-h-full"
               muted
               loop
               playsInline
