@@ -36,6 +36,9 @@
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "supabase/functions",
+    ".node_modules-broken-*",
+    ".next-broken-*"
   ]
 }

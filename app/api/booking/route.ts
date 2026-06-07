@@ -79,6 +79,49 @@ function getServiceRoleKey() {
   );
 }
 
+function getBookingEmailFunctionUrl() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const functionName = process.env.SUPABASE_BOOKING_EMAIL_FUNCTION || "Send-email";
+
+  if (!supabaseUrl) return null;
+
+  return `${supabaseUrl}/functions/v1/${functionName}`;
+}
+
+async function sendBookingEmail(payload: BookingPayload) {
+  const emailFunctionUrl = getBookingEmailFunctionUrl();
+
+  if (!emailFunctionUrl) {
+    console.error("Booking email skipped: missing NEXT_PUBLIC_SUPABASE_URL.");
+    return false;
+  }
+
+  try {
+    const response = await fetch(emailFunctionUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getServiceRoleKey()}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error("Booking email function failed", {
+        status: response.status,
+        body: errorBody
+      });
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Booking email function request failed", error);
+    return false;
+  }
+}
+
 export async function POST(request: Request) {
   const formData = await request.formData();
 
@@ -142,17 +185,11 @@ export async function POST(request: Request) {
       }
     }
 
-    await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/send-booking-email`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${getServiceRoleKey()}`
-      },
-      body: JSON.stringify(payload)
-    }).catch(() => undefined);
+    const emailSent = await sendBookingEmail(payload);
 
     return NextResponse.json({
       ok: true,
+      email_sent: emailSent,
       message: "Your request has been received. Our team will contact you within 24 hours."
     });
   } catch (error) {

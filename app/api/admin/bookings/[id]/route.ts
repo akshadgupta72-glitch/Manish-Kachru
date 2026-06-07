@@ -21,14 +21,26 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   const { id } = await params;
-  const body = (await request.json()) as { status?: AdminStatus };
+  const body = (await request.json()) as { status?: AdminStatus; viewed_at?: string | null };
+  const updatePayload: { status?: AdminStatus; viewed_at?: string | null } = {};
 
-  if (!body.status || !allowedStatuses.includes(body.status)) {
-    return NextResponse.json({ ok: false, message: "Invalid booking status." }, { status: 400 });
+  if (body.status) {
+    if (!allowedStatuses.includes(body.status)) {
+      return NextResponse.json({ ok: false, message: "Invalid booking status." }, { status: 400 });
+    }
+    updatePayload.status = body.status;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(body, "viewed_at")) {
+    updatePayload.viewed_at = body.viewed_at || new Date().toISOString();
+  }
+
+  if (Object.keys(updatePayload).length === 0) {
+    return NextResponse.json({ ok: false, message: "No booking updates supplied." }, { status: 400 });
   }
 
   const supabase = createSupabaseAdminClient();
-  const { error } = await supabase.from("booking_requests").update({ status: body.status }).eq("id", id);
+  const { error } = await supabase.from("booking_requests").update(updatePayload).eq("id", id);
 
   if (error) {
     return NextResponse.json({ ok: false, message: error.message }, { status: 500 });
@@ -52,4 +64,3 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
 
   return NextResponse.json({ ok: true });
 }
-

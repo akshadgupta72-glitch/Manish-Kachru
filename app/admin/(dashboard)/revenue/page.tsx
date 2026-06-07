@@ -1,8 +1,10 @@
 import { AdminStatCard } from "@/components/admin/AdminStatCard";
 import { RevenueCharts } from "@/components/admin/RevenueCharts";
-import { revenueSeries, revenueSummary } from "@/lib/admin/data";
+import { getRevenueData } from "@/lib/admin/data";
 
-export default function AdminRevenuePage() {
+export default async function AdminRevenuePage() {
+  const { revenueSeries, revenueSummary } = await getRevenueData();
+
   return (
     <div className="mx-auto w-full max-w-[1320px] space-y-6">
       <header>

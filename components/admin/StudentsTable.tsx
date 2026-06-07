@@ -69,7 +69,12 @@ export function StudentsTable({ students }: StudentsTableProps) {
           </tbody>
         </table>
       </div>
+      {students.length === 0 ? (
+        <div className="p-12 text-center">
+          <p className="text-[24px] font-semibold tracking-[-0.05em]">No masterclass students yet</p>
+          <p className="mt-2 text-sm text-black/45">Paid weekly masterclass enrollments from Supabase will appear here.</p>
+        </div>
+      ) : null}
     </div>
   );
 }
-

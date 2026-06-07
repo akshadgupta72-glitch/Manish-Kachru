@@ -1,10 +1,12 @@
 import { AdminStatCard } from "@/components/admin/AdminStatCard";
 import { BookingLeadCard } from "@/components/admin/BookingLeadCard";
-import { getAdminBookings, masterclassStudents, revenueSummary } from "@/lib/admin/data";
+import { getAdminBookings, getMasterclassStudents, getRevenueData } from "@/lib/admin/data";
 
 export default async function AdminPage() {
   const bookings = await getAdminBookings(6);
-  const newBookings = bookings.filter((booking) => booking.status === "new");
+  const students = await getMasterclassStudents();
+  const { revenueSummary } = await getRevenueData();
+  const newBookings = bookings.filter((booking) => booking.status === "new" && !booking.viewedAt);
 
   return (
     <div className="mx-auto w-full max-w-[1320px] space-y-8">
@@ -23,8 +25,8 @@ export default async function AdminPage() {
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <AdminStatCard label="New leads" value={String(newBookings.length)} detail="Fresh booking requests waiting for reply." icon="sparkles" tone="gold" />
         <AdminStatCard label="Total bookings" value={String(bookings.length)} detail="Latest requests currently in the private inbox." icon="calendarCheck" />
-        <AdminStatCard label="Students" value={String(masterclassStudents.length)} detail="Weekly masterclass sample roster." icon="users" />
-        <AdminStatCard label="Weekly revenue" value={revenueSummary.weekly} detail="Projected studio revenue overview." icon="indianRupee" tone="dark" />
+        <AdminStatCard label="Students" value={String(students.length)} detail="Real weekly masterclass enrollments." icon="users" />
+        <AdminStatCard label="Weekly revenue" value={revenueSummary.weekly} detail="Paid revenue from Supabase records." icon="indianRupee" tone="dark" />
       </section>
 
       <section>

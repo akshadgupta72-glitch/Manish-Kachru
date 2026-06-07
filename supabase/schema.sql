@@ -16,6 +16,7 @@ create table if not exists public.booking_requests (
   razorpay_payment_id text,
   razorpay_order_id text,
   status text not null default 'new',
+  viewed_at timestamptz,
   created_at timestamptz not null default now()
 );
 
@@ -25,7 +26,8 @@ add column if not exists payment_amount integer,
 add column if not exists payment_currency text default 'INR',
 add column if not exists payment_plan text,
 add column if not exists razorpay_payment_id text,
-add column if not exists razorpay_order_id text;
+add column if not exists razorpay_order_id text,
+add column if not exists viewed_at timestamptz;
 
 alter table public.booking_requests enable row level security;
 
@@ -51,6 +53,9 @@ on public.booking_requests (service_slug);
 create index if not exists booking_requests_payment_status_idx
 on public.booking_requests (payment_status);
 
+create index if not exists booking_requests_viewed_at_idx
+on public.booking_requests (viewed_at);
+
 create or replace view public.crm_client_requests as
 select
   id,
@@ -70,6 +75,7 @@ select
   razorpay_payment_id,
   razorpay_order_id,
   status,
+  viewed_at,
   created_at
 from public.booking_requests
 order by created_at desc;

@@ -19,6 +19,7 @@ export type AdminBooking = {
   razorpayPaymentId: string | null;
   razorpayOrderId: string | null;
   status: AdminStatus;
+  viewedAt: string | null;
   submittedAt: string;
 };
 

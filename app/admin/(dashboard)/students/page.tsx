@@ -1,8 +1,10 @@
 import { AdminStatCard } from "@/components/admin/AdminStatCard";
 import { StudentsTable } from "@/components/admin/StudentsTable";
-import { masterclassStudents } from "@/lib/admin/data";
+import { getMasterclassStudents } from "@/lib/admin/data";
 
-export default function AdminStudentsPage() {
+export default async function AdminStudentsPage() {
+  const students = await getMasterclassStudents();
+
   return (
     <div className="mx-auto w-full max-w-[1320px] space-y-6">
       <header>
@@ -13,12 +15,12 @@ export default function AdminStudentsPage() {
       </header>
 
       <section className="grid gap-4 md:grid-cols-3">
-        <AdminStatCard label="Total students" value={String(masterclassStudents.length)} icon="graduationCap" />
-        <AdminStatCard label="Paid students" value={String(masterclassStudents.filter((student) => student.paymentStatus === "Paid").length)} icon="userCheck" tone="gold" />
-        <AdminStatCard label="Pending follow-ups" value={String(masterclassStudents.filter((student) => student.paymentStatus === "Pending").length)} icon="mail" tone="dark" />
+        <AdminStatCard label="Total students" value={String(students.length)} icon="graduationCap" />
+        <AdminStatCard label="Paid students" value={String(students.filter((student) => student.paymentStatus === "Paid").length)} icon="userCheck" tone="gold" />
+        <AdminStatCard label="Pending follow-ups" value={String(students.filter((student) => student.paymentStatus === "Pending").length)} icon="mail" tone="dark" />
       </section>
 
-      <StudentsTable students={masterclassStudents} />
+      <StudentsTable students={students} />
     </div>
   );
 }

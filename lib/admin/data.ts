@@ -19,6 +19,7 @@ type BookingRow = {
   razorpay_payment_id: string | null;
   razorpay_order_id: string | null;
   status: string | null;
+  viewed_at: string | null;
   created_at: string | null;
 };
 
@@ -50,8 +51,28 @@ function mapBooking(row: BookingRow): AdminBooking {
     razorpayPaymentId: row.razorpay_payment_id,
     razorpayOrderId: row.razorpay_order_id,
     status: normalizeStatus(row.status),
+    viewedAt: row.viewed_at,
     submittedAt: row.created_at || new Date().toISOString()
   };
+}
+
+function formatMoney(amount: number) {
+  if (amount >= 10000000) return `₹${(amount / 10000000).toFixed(2)}Cr`;
+  if (amount >= 100000) return `₹${(amount / 100000).toFixed(2)}L`;
+  if (amount >= 1000) return `₹${(amount / 1000).toFixed(1)}K`;
+  return `₹${Math.round(amount).toLocaleString("en-IN")}`;
+}
+
+function isMasterclassSlug(slug: string) {
+  return slug === "weekly-masterclasses";
+}
+
+function isConsultationSlug(slug: string) {
+  return slug === "beauty-consultation";
+}
+
+function isMakeupSlug(slug: string) {
+  return !isMasterclassSlug(slug) && !isConsultationSlug(slug);
 }
 
 export async function getAdminBookings(limit?: number) {
@@ -59,7 +80,7 @@ export async function getAdminBookings(limit?: number) {
     const supabase = createSupabaseAdminClient();
     let query = supabase
       .from("booking_requests")
-      .select("id, service_slug, service_title, name, phone, email, event_date, location, functions, notes, payment_status, payment_amount, payment_currency, payment_plan, razorpay_payment_id, razorpay_order_id, status, created_at")
+      .select("id, service_slug, service_title, name, phone, email, event_date, location, functions, notes, payment_status, payment_amount, payment_currency, payment_plan, razorpay_payment_id, razorpay_order_id, status, viewed_at, created_at")
       .order("created_at", { ascending: false });
 
     if (limit) query = query.limit(limit);
@@ -68,7 +89,7 @@ export async function getAdminBookings(limit?: number) {
 
     if (error) {
       const shouldRetryLegacySelect =
-        error.message.includes("payment_") || error.message.includes("razorpay_");
+        error.message.includes("payment_") || error.message.includes("razorpay_") || error.message.includes("viewed_at");
 
       if (!shouldRetryLegacySelect) throw error;
 
@@ -89,7 +110,8 @@ export async function getAdminBookings(limit?: number) {
           payment_currency: "INR",
           payment_plan: null,
           razorpay_payment_id: null,
-          razorpay_order_id: null
+          razorpay_order_id: null,
+          viewed_at: null
         })
       );
     }
@@ -99,39 +121,6 @@ export async function getAdminBookings(limit?: number) {
     return [];
   }
 }
-
-export const masterclassStudents: MasterclassStudent[] = [
-  {
-    id: "stu-001",
-    name: "Aarohi Mehta",
-    email: "aarohi@example.com",
-    phone: "9876543210",
-    paymentStatus: "Paid",
-    enrollmentDate: "2026-05-14",
-    assignedBatch: "May 18 - May 23",
-    attendance: "Not marked"
-  },
-  {
-    id: "stu-002",
-    name: "Riya Kapoor",
-    email: "riya@example.com",
-    phone: "9876501234",
-    paymentStatus: "Pending",
-    enrollmentDate: "2026-05-17",
-    assignedBatch: "May 25 - May 30",
-    attendance: "Not marked"
-  },
-  {
-    id: "stu-003",
-    name: "Meher Sethi",
-    email: "meher@example.com",
-    phone: "9990011223",
-    paymentStatus: "Paid",
-    enrollmentDate: "2026-05-12",
-    assignedBatch: "May 18 - May 23",
-    attendance: "Present"
-  }
-];
 
 function formatBatchLabel(start: Date, end: Date) {
   const formatter = new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short" });
@@ -158,7 +147,7 @@ export async function getMasterclassStudents() {
       };
     });
 
-  return students.length > 0 ? students : masterclassStudents;
+  return students;
 }
 
 export function getMasterclassBatchForEnrollment(enrollmentDate: Date) {
@@ -175,22 +164,56 @@ export function getMasterclassBatchForEnrollment(enrollmentDate: Date) {
   return { batchStart, batchEnd };
 }
 
-export const revenueSeries: RevenuePoint[] = [
-  { label: "Mon", masterclass: 14970, bridal: 42000, consultation: 2500 },
-  { label: "Tue", masterclass: 9980, bridal: 36000, consultation: 3000 },
-  { label: "Wed", masterclass: 12475, bridal: 52000, consultation: 1500 },
-  { label: "Thu", masterclass: 15968, bridal: 30000, consultation: 4000 },
-  { label: "Fri", masterclass: 19960, bridal: 68000, consultation: 3500 },
-  { label: "Sat", masterclass: 24950, bridal: 74000, consultation: 5000 },
-  { label: "Sun", masterclass: 7485, bridal: 48000, consultation: 2000 }
-];
+export async function getRevenueData() {
+  const bookings = await getAdminBookings();
+  const paidBookings = bookings.filter((booking) => booking.paymentStatus === "paid" && booking.paymentAmount);
+  const now = new Date();
+  const dayStart = new Date(now);
+  dayStart.setHours(0, 0, 0, 0);
+  const weekStart = new Date(dayStart);
+  weekStart.setDate(dayStart.getDate() - 6);
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const yearStart = new Date(now.getFullYear(), 0, 1);
 
-export const revenueSummary = {
-  daily: "₹28.4K",
-  weekly: "₹4.51L",
-  monthly: "₹18.2L",
-  yearly: "₹1.94Cr",
-  masterclass: "₹1.06L",
-  bridal: "₹3.50L",
-  consultation: "₹21.5K"
-};
+  const sum = (items: AdminBooking[]) =>
+    items.reduce((total, booking) => total + (booking.paymentAmount || 0) / 100, 0);
+
+  const inRange = (booking: AdminBooking, start: Date) => new Date(booking.submittedAt) >= start;
+  const byService = (predicate: (slug: string) => boolean) =>
+    sum(paidBookings.filter((booking) => predicate(booking.serviceSlug)));
+
+  const labels = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(weekStart);
+    date.setDate(weekStart.getDate() + index);
+    return date;
+  });
+
+  const revenueSeries: RevenuePoint[] = labels.map((date) => {
+    const nextDate = new Date(date);
+    nextDate.setDate(date.getDate() + 1);
+    const dayBookings = paidBookings.filter((booking) => {
+      const submitted = new Date(booking.submittedAt);
+      return submitted >= date && submitted < nextDate;
+    });
+
+    return {
+      label: new Intl.DateTimeFormat("en-IN", { weekday: "short" }).format(date),
+      masterclass: sum(dayBookings.filter((booking) => isMasterclassSlug(booking.serviceSlug))),
+      bridal: sum(dayBookings.filter((booking) => isMakeupSlug(booking.serviceSlug))),
+      consultation: sum(dayBookings.filter((booking) => isConsultationSlug(booking.serviceSlug)))
+    };
+  });
+
+  return {
+    revenueSeries,
+    revenueSummary: {
+      daily: formatMoney(sum(paidBookings.filter((booking) => inRange(booking, dayStart)))),
+      weekly: formatMoney(sum(paidBookings.filter((booking) => inRange(booking, weekStart)))),
+      monthly: formatMoney(sum(paidBookings.filter((booking) => inRange(booking, monthStart)))),
+      yearly: formatMoney(sum(paidBookings.filter((booking) => inRange(booking, yearStart)))),
+      masterclass: formatMoney(byService(isMasterclassSlug)),
+      bridal: formatMoney(byService(isMakeupSlug)),
+      consultation: formatMoney(byService(isConsultationSlug))
+    }
+  };
+}

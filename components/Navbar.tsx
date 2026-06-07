@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -27,10 +28,22 @@ export function Navbar() {
         <Link
           href="/"
           onClick={closeMenu}
-          className="focus-ring font-logo text-[13px] font-normal uppercase leading-none tracking-[0.06em] text-black sm:text-[15px]"
+          className="focus-ring inline-flex items-center gap-3 text-black"
           aria-label="Looks By Manish Kachru home"
         >
-          LOOKSBYMANISH KACHRU .
+          <span className="relative h-9 w-9 overflow-hidden rounded-full bg-black ring-1 ring-black/10">
+            <Image
+              src="/images/manish%20logo.jpeg"
+              alt=""
+              fill
+              sizes="36px"
+              className="scale-[2.35] object-cover object-[center_55%]"
+              priority
+            />
+          </span>
+          <span className="font-logo text-[12px] font-normal uppercase leading-none tracking-[0.08em] sm:text-[14px]">
+            LOOKSBYMANISH KACHRU .
+          </span>
         </Link>
 
         <div className="hidden items-center justify-center gap-8 lg:flex">

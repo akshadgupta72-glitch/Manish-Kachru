@@ -1,9 +1,10 @@
 import { AdminStatCard } from "@/components/admin/AdminStatCard";
 import { StudentsTable } from "@/components/admin/StudentsTable";
-import { getMasterclassStudents, revenueSummary } from "@/lib/admin/data";
+import { getMasterclassStudents, getRevenueData } from "@/lib/admin/data";
 
 export default async function AdminMasterclassPage() {
   const students = await getMasterclassStudents();
+  const { revenueSummary } = await getRevenueData();
   const paidStudents = students.filter((student) => student.paymentStatus === "Paid").length;
   const pendingStudents = students.filter((student) => student.paymentStatus === "Pending").length;
 
@@ -22,7 +23,7 @@ export default async function AdminMasterclassPage() {
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <AdminStatCard label="Total enrolled" value={String(students.length)} icon="users" />
         <AdminStatCard label="Current week" value={String(paidStudents)} detail="Paid students in this week's batch." icon="calendarDays" />
-        <AdminStatCard label="Next batch" value="1" detail="Sunday enrollments move to the next week." icon="calendarDays" tone="gold" />
+        <AdminStatCard label="Batch assigned" value={String(students.length)} detail="Sunday enrollments move to the next week." icon="calendarDays" tone="gold" />
         <AdminStatCard label="Pending payments" value={String(pendingStudents)} icon="creditCard" />
         <AdminStatCard label="Weekly revenue" value={revenueSummary.masterclass} icon="indianRupee" tone="dark" />
       </section>
