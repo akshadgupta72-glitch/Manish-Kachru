@@ -797,10 +797,12 @@ export function ServiceBookingForm({ page }: ServiceBookingFormProps) {
                   {page.functions.map((item) => (
                     <label
                       key={item}
-                      className="focus-within:ring-2 focus-within:ring-black/30 rounded-full border border-black/12 bg-[#fbfaf8] px-3 py-1.5 text-[13px] text-black/70"
+                      className="group cursor-pointer rounded-full"
                     >
-                      <input className="sr-only" type="checkbox" name="functions" value={item} />
-                      {item}
+                      <input className="peer sr-only" type="checkbox" name="functions" value={item} />
+                      <span className="focus-ring inline-flex rounded-full border border-black/12 bg-[#fbfaf8] px-3 py-1.5 text-[13px] text-black/70 transition-colors duration-200 peer-checked:border-black peer-checked:bg-black peer-checked:text-white group-hover:border-black/35">
+                        {item}
+                      </span>
                     </label>
                   ))}
                 </div>

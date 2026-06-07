@@ -79,47 +79,68 @@ function getServiceRoleKey() {
   );
 }
 
-function getBookingEmailFunctionUrl() {
+function getBookingEmailFunctionUrls() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const functionName = process.env.SUPABASE_BOOKING_EMAIL_FUNCTION || "Send-email";
 
-  if (!supabaseUrl) return null;
+  if (!supabaseUrl) return [];
 
-  return `${supabaseUrl}/functions/v1/${functionName}`;
+  const configuredName = process.env.SUPABASE_BOOKING_EMAIL_FUNCTION;
+  const functionNames = [
+    configuredName,
+    "Send-email",
+    "send-booking-email",
+    "swift-worker"
+  ]
+    .filter((name): name is string => Boolean(name?.trim()))
+    .map((name) => name.trim());
+
+  return Array.from(new Set(functionNames)).map((functionName) => ({
+    functionName,
+    url: `${supabaseUrl}/functions/v1/${functionName}`
+  }));
 }
 
 async function sendBookingEmail(payload: BookingPayload) {
-  const emailFunctionUrl = getBookingEmailFunctionUrl();
+  const emailFunctionTargets = getBookingEmailFunctionUrls();
 
-  if (!emailFunctionUrl) {
+  if (emailFunctionTargets.length === 0) {
     console.error("Booking email skipped: missing NEXT_PUBLIC_SUPABASE_URL.");
     return false;
   }
 
-  try {
-    const response = await fetch(emailFunctionUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${getServiceRoleKey()}`
-      },
-      body: JSON.stringify(payload)
-    });
+  const serviceRoleKey = getServiceRoleKey();
 
-    if (!response.ok) {
+  for (const target of emailFunctionTargets) {
+    try {
+      const response = await fetch(target.url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${serviceRoleKey}`,
+          apikey: serviceRoleKey
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        return true;
+      }
+
       const errorBody = await response.text();
       console.error("Booking email function failed", {
+        functionName: target.functionName,
         status: response.status,
         body: errorBody
       });
-      return false;
+    } catch (error) {
+      console.error("Booking email function request failed", {
+        functionName: target.functionName,
+        error
+      });
     }
-
-    return true;
-  } catch (error) {
-    console.error("Booking email function request failed", error);
-    return false;
   }
+
+  return false;
 }
 
 export async function POST(request: Request) {
