@@ -43,6 +43,42 @@ function rupees(amount?: number | null) {
   return `₹${(amount / 100).toLocaleString("en-IN")}`;
 }
 
+function leadLabel(payload: BookingEmailPayload) {
+  const service = `${payload.service_slug || ""} ${payload.service_title || ""}`.toLowerCase();
+
+  if (service.includes("masterclass")) return "weekly masterclass enrollment";
+  if (service.includes("consultation")) return "beauty consultation request";
+  return "makeup quotation request";
+}
+
+async function sendEmail({
+  resendApiKey,
+  from,
+  to,
+  subject,
+  html
+}: {
+  resendApiKey: string;
+  from: string;
+  to: string;
+  subject: string;
+  html: string;
+}) {
+  return fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${resendApiKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      from,
+      to,
+      subject,
+      html
+    })
+  });
+}
+
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -77,11 +113,14 @@ Deno.serve(async (request) => {
   }
 
   const safeName = escapeHtml(payload.name);
+  const safeEmail = escapeHtml(payload.email);
   const safeService = escapeHtml(payload.service_title);
-  const safeFunctions = payload.functions.length > 0 ? payload.functions.map(escapeHtml).join(", ") : "Not specified";
+  const safeLeadLabel = escapeHtml(leadLabel(payload));
+  const safeFunctions =
+    payload.functions?.length > 0 ? payload.functions.map(escapeHtml).join(", ") : "Not specified";
   const safeDate = payload.event_date ? escapeHtml(payload.event_date) : "Not specified";
   const safeLocation = payload.location ? escapeHtml(payload.location) : "Not specified";
-  const safePhone = escapeHtml(payload.phone);
+  const safePhone = escapeHtml(payload.phone || "Not specified");
   const safeNotes = payload.notes ? escapeHtml(payload.notes) : "Not added";
   const safePaymentStatus = payload.payment_status ? escapeHtml(payload.payment_status) : "Not required";
   const safePaymentPlan = payload.payment_plan ? escapeHtml(payload.payment_plan) : "Not specified";
@@ -90,81 +129,93 @@ Deno.serve(async (request) => {
   const safeOrderId = payload.razorpay_order_id ? escapeHtml(payload.razorpay_order_id) : "Not applicable";
   const safeCrmUrl = escapeHtml(crmUrl);
 
-  const detailsBlock = `
-    <div style="border: 1px solid #e7e1d8; padding: 18px; margin: 24px 0;">
+  const customerDetailsBlock = `
+    <div style="border:1px solid #e7e1d8; padding:18px; margin:24px 0; border-radius:14px; background:#fffaf5;">
       <p><strong>Service:</strong> ${safeService}</p>
       <p><strong>Phone:</strong> ${safePhone}</p>
       <p><strong>Date:</strong> ${safeDate}</p>
       <p><strong>Location:</strong> ${safeLocation}</p>
-      <p><strong>Functions:</strong> ${safeFunctions}</p>
-      <p><strong>Payment:</strong> ${safePaymentStatus}</p>
-      <p><strong>Plan:</strong> ${safePaymentPlan}</p>
-      <p><strong>Amount:</strong> ${safePaymentAmount}</p>
-      <p><strong>Razorpay Payment ID:</strong> ${safePaymentId}</p>
-      <p><strong>Razorpay Order ID:</strong> ${safeOrderId}</p>
+      <p><strong>Occasion / Function:</strong> ${safeFunctions}</p>
       <p><strong>Notes:</strong> ${safeNotes}</p>
     </div>
   `;
 
+  const ownerDetailsBlock = `
+    <div style="border:1px solid #e7e1d8; padding:18px; margin:24px 0; border-radius:14px; background:#fffaf5;">
+      <p><strong>Lead type:</strong> ${safeLeadLabel}</p>
+      <p><strong>Service:</strong> ${safeService}</p>
+      <p><strong>Name:</strong> ${safeName}</p>
+      <p><strong>Email:</strong> ${safeEmail}</p>
+      <p><strong>Phone:</strong> ${safePhone}</p>
+      <p><strong>Date:</strong> ${safeDate}</p>
+      <p><strong>Location:</strong> ${safeLocation}</p>
+      <p><strong>Occasion / Function:</strong> ${safeFunctions}</p>
+      <p><strong>Notes:</strong> ${safeNotes}</p>
+      <p><strong>Payment status:</strong> ${safePaymentStatus}</p>
+      <p><strong>Payment plan:</strong> ${safePaymentPlan}</p>
+      <p><strong>Payment amount:</strong> ${safePaymentAmount}</p>
+      <p><strong>Razorpay payment ID:</strong> ${safePaymentId}</p>
+      <p><strong>Razorpay order ID:</strong> ${safeOrderId}</p>
+    </div>
+  `;
+
   const customerHtml = `
-    <div style="font-family: Inter, Arial, sans-serif; color: #111; line-height: 1.6;">
-      <p style="text-transform: uppercase; letter-spacing: 0.24em; font-size: 11px; color: #9f7c50;">Looks by Manish Kachru</p>
-      <h1 style="font-size: 30px; line-height: 1.1; margin: 12px 0 18px;">Your request has been received.</h1>
+    <div style="font-family:Inter, Arial, sans-serif; color:#111; line-height:1.6; max-width:640px; margin:0 auto;">
+      <p style="text-transform:uppercase; letter-spacing:0.24em; font-size:11px; color:#9f7c50;">Looks by Manish Kachru</p>
+      <h1 style="font-size:30px; line-height:1.1; margin:12px 0 18px;">Your request has been received.</h1>
       <p>Hi ${safeName},</p>
-      <p>Thank you for sharing your requirements for <strong>${safeService}</strong>. We have received your request and our studio team will review the details carefully.</p>
-      <p>You can expect a reply within 24 hours with availability, next steps, and guidance tailored to your occasion.</p>
-      ${detailsBlock}
-      <p style="color: #666;">Warmly,<br />Looks by Manish Kachru</p>
+      <p>Thank you for sharing your requirements for <strong>${safeService}</strong>. We have received your details and our studio team will review them carefully.</p>
+      <p>Our team will contact you within 24 hours with availability, next steps, and guidance tailored to your occasion.</p>
+      ${customerDetailsBlock}
+      <p style="color:#666;">Warmly,<br />Looks by Manish Kachru</p>
     </div>
   `;
 
   const ownerHtml = `
-    <div style="font-family: Inter, Arial, sans-serif; color: #111; line-height: 1.6;">
-      <p style="text-transform: uppercase; letter-spacing: 0.24em; font-size: 11px; color: #9f7c50;">New CRM Lead</p>
-      <h1 style="font-size: 30px; line-height: 1.1; margin: 12px 0 18px;">New client quotation request</h1>
-      <p><strong>${safeName}</strong> submitted a new ${safeService} request.</p>
-      ${detailsBlock}
+    <div style="font-family:Inter, Arial, sans-serif; color:#111; line-height:1.6; max-width:680px; margin:0 auto;">
+      <p style="text-transform:uppercase; letter-spacing:0.24em; font-size:11px; color:#9f7c50;">New CRM Lead</p>
+      <h1 style="font-size:30px; line-height:1.1; margin:12px 0 18px;">New ${safeLeadLabel}</h1>
+      <p>Hi Manish,</p>
+      <p><strong>${safeName}</strong> has submitted a new <strong>${safeService}</strong> enquiry. Review the client details below and open the CRM to update status, follow up, or archive the lead.</p>
+      ${ownerDetailsBlock}
       <p>
-        <a href="${safeCrmUrl}" style="display:inline-block;background:#111;color:#fff;text-decoration:none;padding:12px 18px;border-radius:999px;">Open CRM</a>
+        <a href="${safeCrmUrl}" style="display:inline-block; background:#111; color:#fff; text-decoration:none; padding:12px 18px; border-radius:999px;">Open CRM</a>
       </p>
     </div>
   `;
 
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${resendApiKey}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
+  const [customerResponse, ownerResponse] = await Promise.all([
+    sendEmail({
+      resendApiKey,
       from,
       to: payload.email,
       subject: `We received your ${payload.service_title} request`,
       html: customerHtml
+    }),
+    sendEmail({
+      resendApiKey,
+      from,
+      to: ownerEmail,
+      subject: `New ${leadLabel(payload)} - ${payload.name}`,
+      html: ownerHtml
     })
-  });
+  ]);
 
-  if (!response.ok) {
-    const error = await response.text();
-    return new Response(JSON.stringify({ error }), {
+  if (!customerResponse.ok) {
+    const error = await customerResponse.text();
+    return new Response(JSON.stringify({ error: `Customer email failed: ${error}` }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   }
 
-  await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${resendApiKey}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      from,
-      to: ownerEmail,
-      subject: `New ${payload.service_title} lead - ${payload.name}`,
-      html: ownerHtml
-    })
-  }).catch(() => undefined);
+  if (!ownerResponse.ok) {
+    const error = await ownerResponse.text();
+    return new Response(JSON.stringify({ error: `Owner email failed: ${error}` }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
+  }
 
   return new Response(JSON.stringify({ ok: true }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" }
