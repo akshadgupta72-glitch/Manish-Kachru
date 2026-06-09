@@ -10,10 +10,9 @@ export function isAdminEmail(email?: string | null) {
 
   if (!email) return false;
 
-  // Development fallback: when ADMIN_EMAILS is not configured, any authenticated
-  // Supabase user can enter admin. Set ADMIN_EMAILS before production deployment.
-  if (adminEmails.length === 0) return true;
+  // Production-safe default: no configured admin emails means no admin access.
+  // Set ADMIN_EMAILS in Vercel before deploying the CRM.
+  if (adminEmails.length === 0) return false;
 
   return adminEmails.includes(email.toLowerCase());
 }
-
