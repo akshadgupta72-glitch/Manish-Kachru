@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { NextResponse } from "next/server";
+import { readRazorpayKeySecret } from "@/lib/razorpay-env";
 
 export const runtime = "nodejs";
 
@@ -27,11 +28,15 @@ export async function POST(request: Request) {
     );
   }
 
-  const keySecret = process.env.RAZORPAY_KEY_SECRET?.trim();
+  const keySecret = readRazorpayKeySecret();
 
   if (!keySecret) {
     return NextResponse.json(
-      { ok: false, message: "Missing Razorpay server environment variables." },
+      {
+        ok: false,
+        message:
+          "Missing Razorpay server environment variables. Add Razorpay_Live_Key_Secret in Vercel."
+      },
       { status: 500 }
     );
   }

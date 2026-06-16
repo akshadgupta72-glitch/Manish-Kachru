@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { readRazorpayKeyId, readRazorpayKeySecret } from "@/lib/razorpay-env";
 
 export const runtime = "nodejs";
 
@@ -9,11 +10,13 @@ type CreateOrderBody = {
 };
 
 function getRazorpayCredentials() {
-  const keyId = process.env.RAZORPAY_KEY_ID?.trim() || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.trim();
-  const keySecret = process.env.RAZORPAY_KEY_SECRET?.trim();
+  const keyId = readRazorpayKeyId();
+  const keySecret = readRazorpayKeySecret();
 
   if (!keyId || !keySecret) {
-    throw new Error("Missing Razorpay environment variables.");
+    throw new Error(
+      "Missing Razorpay environment variables. Add Razorpay_Live_API_Key and Razorpay_Live_Key_Secret in Vercel."
+    );
   }
 
   return { keyId, keySecret };

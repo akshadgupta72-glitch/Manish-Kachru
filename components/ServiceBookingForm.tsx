@@ -133,10 +133,6 @@ function readFormValue(formData: FormData, key: string) {
 }
 
 async function getRazorpayPublicKey() {
-  const bundledKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.trim();
-
-  if (bundledKey) return bundledKey;
-
   const response = await fetch("/api/razorpay-config", {
     cache: "no-store"
   });
