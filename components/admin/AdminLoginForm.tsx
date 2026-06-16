@@ -3,7 +3,7 @@
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function AdminLoginForm() {
   const router = useRouter();
@@ -12,6 +12,19 @@ export function AdminLoginForm() {
   const [pin, setPin] = useState("");
   const [error, setError] = useState(searchParams.get("error") === "not_admin" ? "This account is not allowed to access admin." : "");
   const [isPending, setIsPending] = useState(false);
+
+  useEffect(() => {
+    const authError = searchParams.get("error");
+
+    if (authError === "not_admin") {
+      setError("This email is not allowed to access the admin studio.");
+      setIsPending(false);
+      createBrowserSupabaseClient().auth.signOut();
+      return;
+    }
+
+    if (authError) setIsPending(false);
+  }, [searchParams]);
 
   function handlePinChange(event: React.ChangeEvent<HTMLInputElement>) {
     const nextPin = event.target.value.replace(/\D/g, "").slice(0, 6);
@@ -24,7 +37,7 @@ export function AdminLoginForm() {
     setIsPending(true);
 
     const formData = new FormData(event.currentTarget);
-    const email = String(formData.get("email") || "");
+    const email = String(formData.get("email") || "").trim().toLowerCase();
     const redirectedFrom = searchParams.get("redirectedFrom") || "/admin";
 
     if (pin.length !== 6) {
@@ -78,8 +91,10 @@ export function AdminLoginForm() {
             type="email"
             required
             autoComplete="email"
+            autoCapitalize="none"
+            spellCheck={false}
             defaultValue="akshadgupta848@gmail.com"
-            className="mt-2 h-12 w-full rounded-[13px] border border-white/12 bg-black/34 px-4 text-[15px] text-white outline-none transition-colors placeholder:text-white/24 focus:border-[#d8ae64]/70 mobile-l:h-13"
+            className="mt-2 h-12 w-full rounded-[13px] border border-white/16 bg-white px-4 text-[15px] text-black caret-black outline-none transition-colors placeholder:text-black/35 focus:border-[#d8ae64]/80 mobile-l:h-13"
             placeholder="admin email"
           />
         </label>
