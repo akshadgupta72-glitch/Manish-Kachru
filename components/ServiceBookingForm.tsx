@@ -223,6 +223,11 @@ export function ServiceBookingForm({ page }: ServiceBookingFormProps) {
         throw new Error(order.message || "Could not create Razorpay order.");
       }
 
+      console.log({
+        razorpayKey: key,
+        orderId: order.order_id
+      });
+
       const razorpay = new window.Razorpay({
         key,
         amount: order.amount,
@@ -349,6 +354,11 @@ export function ServiceBookingForm({ page }: ServiceBookingFormProps) {
       if (!orderResponse.ok || !order.ok || !order.order_id || !order.amount || !order.currency) {
         throw new Error(order.message || "Could not create Razorpay order.");
       }
+
+      console.log({
+        razorpayKey: key,
+        orderId: order.order_id
+      });
 
       const razorpay = new window.Razorpay({
         key,

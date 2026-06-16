@@ -13,6 +13,11 @@ function getRazorpayCredentials() {
   const keyId = readRazorpayKeyId();
   const keySecret = readRazorpayKeySecret();
 
+  console.log({
+    keyId,
+    hasSecret: !!keySecret
+  });
+
   if (!keyId || !keySecret) {
     throw new Error(
       "Missing Razorpay environment variables. Add Razorpay_Live_API_Key and Razorpay_Live_Key_Secret in Vercel."

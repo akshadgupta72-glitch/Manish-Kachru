@@ -25,12 +25,12 @@ const nextConfig: NextConfig = {
       "object-src 'none'",
       "frame-ancestors 'none'",
       "form-action 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://checkout-static-next.razorpay.com",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https://msukvnceueoxgklxennx.supabase.co",
       "media-src 'self' blob: https://msukvnceueoxgklxennx.supabase.co",
       "font-src 'self' data:",
-      "connect-src 'self' https://msukvnceueoxgklxennx.supabase.co https://*.supabase.co https://api.razorpay.com https://checkout.razorpay.com",
+      "connect-src 'self' https://msukvnceueoxgklxennx.supabase.co https://*.supabase.co https://api.razorpay.com https://checkout.razorpay.com https://checkout-static-next.razorpay.com",
       "frame-src https://api.razorpay.com https://checkout.razorpay.com",
       "upgrade-insecure-requests"
     ].join("; ");
