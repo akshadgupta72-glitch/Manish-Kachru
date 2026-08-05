@@ -1,46 +1,38 @@
-# Looks By Manish Kachru
+# Looks by Manish Kachru
 
-Luxury editorial makeup artist website built with Next.js 15, TypeScript, Tailwind CSS, Framer Motion, and Supabase.
+[![Live project](https://img.shields.io/badge/Live-Open_project-111111?style=flat-square)](https://project-xvqw5.vercel.app)
 
-## Run Locally
+A luxury editorial portfolio, service-booking and operations platform built with Next.js and TypeScript.
+
+## Product highlights
+
+- Editorial landing experience with motion-led visual storytelling
+- Dedicated service pages for bridal, party, consultation and film-direction work
+- Booking and payment flows backed by Razorpay
+- Supabase-powered data, authentication and media workflows
+- Admin views for bookings, students, masterclasses, revenue and settings
+- Responsive layouts, policy pages, sitemap and production deployment
+
+## Stack
+
+- Next.js App Router
+- React and TypeScript
+- Tailwind CSS and Framer Motion
+- Supabase
+- Razorpay
+- Vercel
+
+## Local development
 
 ```bash
 npm install
+cp .env.example .env.local
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Configure the Supabase and Razorpay values documented in `.env.example`. Never commit live credentials.
 
-## Environment
+## Engineering focus
 
-Copy `.env.example` to `.env.local` and add your Supabase keys:
+The project combines a premium content experience with operational booking tools. Server-side routes protect payment operations, while the admin area keeps customer and revenue workflows separate from the public portfolio.
 
-```bash
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-```
-
-## Structure
-
-- `app/` contains the Next.js App Router pages, metadata, and global styles.
-- `components/` contains modular luxury editorial sections.
-- `lib/supabase/` contains Supabase client utilities.
-- `public/images/` is reserved for optimized image assets.
-- `public/videos/` is reserved for compressed video reels and poster media.
-
-## Image Setup
-
-Replace these placeholders with final assets:
-
-- `public/images/hero-placeholder.svg`
-- `public/images/portfolio-01.svg`
-- `public/images/portfolio-02.svg`
-- `public/images/portfolio-03.svg`
-
-All visual components already use `next/image`.
-
-## Build Flow
-
-We will refine one section at a time from Framer screenshots, real imagery, and layout references. The current files are a clean foundation, not the final website design.
-# Manish-Kachru
-# Manish-Kachru
