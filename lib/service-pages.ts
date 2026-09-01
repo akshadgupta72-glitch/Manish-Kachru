@@ -58,7 +58,9 @@ const editorialPartyVideos = [
   videoFile("Editorial and party looks by manish kachru optimised.", "SaveClip.App_AQOOloN5UwtIikHAgqrZFLCRL7xua4MhzoYPSyqMPxzY-3SEMmMLc-37lMHi0xlwYE5osLIvbvu9FZ6dIm5TiZDTF-FqN9YKoJBR5dM.mp4"),
   videoFile("Editorial and party looks by manish kachru optimised.", "SaveClip.App_AQPrWB-9zSnf-ZPXzDCuStMeH--l7661cwCZWG9zxxvNZWnNt9zDJ4GW0qlXZyV7fgv8fAOYw_BcNHgHhiRhrl58fD8atK9609d0vew.mp4"),
   videoFile("Editorial and party looks by manish kachru optimised.", "Video-184.mp4"),
-  videoFile("Editorial and party looks by manish kachru optimised.", "Video-892.mp4")
+  videoFile("Editorial and party looks by manish kachru optimised.", "Video-892.mp4"),
+  videoFile("Editorial and party looks by manish kachru optimised.", "what you get editorial.mp4"),
+  videoFile("Editorial and party looks by manish kachru optimised.", "what you get party.mp4")
 ];
 
 export const servicePages: Record<string, ServicePage> = {
