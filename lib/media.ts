@@ -1,25 +1,9 @@
-export const SUPABASE_MEDIA_BASE_URL =
-  "https://msukvnceueoxgklxennx.supabase.co/storage/v1/object/public/media";
-
-function encodePathSegment(segment: string) {
-  try {
-    return encodeURIComponent(decodeURIComponent(segment));
-  } catch {
-    return encodeURIComponent(segment);
-  }
-}
-
-function normalizeMediaPath(path: string) {
-  return path
-    .replace(/^\/+/, "")
-    .split("/")
-    .filter(Boolean)
-    .map(encodePathSegment)
-    .join("/");
+function normalizePublicPath(path: string) {
+  return `/${path.replace(/^\/+/, "")}`;
 }
 
 export function mediaUrl(path: string) {
-  return `${SUPABASE_MEDIA_BASE_URL}/${normalizeMediaPath(path)}`;
+  return normalizePublicPath(path);
 }
 
 export function imageUrl(path: string) {
@@ -45,4 +29,3 @@ export function serviceImage(filename: string) {
 export function videoFile(folder: string, filename: string) {
   return videoUrl(`${folder}/${filename}`);
 }
-

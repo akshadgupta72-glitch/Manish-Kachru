@@ -12,5 +12,7 @@ coverage
 *.tsbuildinfo
 vercel
 .vercel
-public/images/
-public/videos/
+public/videos/New videos/
+public/**/*.DS_Store
+public/**/*.heic
+public/**/*.HEIC

@@ -9,11 +9,6 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "msukvnceueoxgklxennx.supabase.co",
-        pathname: "/storage/v1/object/public/media/**"
-      },
-      {
-        protocol: "https",
         hostname: "images.unsplash.com"
       }
     ]
@@ -27,8 +22,13 @@ const nextConfig: NextConfig = {
       "form-action 'self'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://checkout-static-next.razorpay.com",
       "style-src 'self' 'unsafe-inline'",
+<<<<<<< HEAD
       "img-src 'self' data: blob: https://msukvnceueoxgklxennx.supabase.co",
       "media-src 'self' blob: https://msukvnceueoxgklxennx.supabase.co",
+=======
+      "img-src 'self' data: blob:",
+      "media-src 'self' blob:",
+>>>>>>> cf502ab (Serve website media from local public assets)
       "font-src 'self' data:",
       "connect-src 'self' https://msukvnceueoxgklxennx.supabase.co https://*.supabase.co https://api.razorpay.com https://checkout.razorpay.com https://checkout-static-next.razorpay.com",
       "frame-src https://api.razorpay.com https://checkout.razorpay.com",
