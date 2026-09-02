@@ -16,3 +16,4 @@ public/videos/New videos/
 public/**/*.DS_Store
 public/**/*.heic
 public/**/*.HEIC
+.env*
